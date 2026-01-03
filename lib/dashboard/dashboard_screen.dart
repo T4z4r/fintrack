@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 import '../core/api.dart';
+import '../auth/auth_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -8,45 +10,64 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final Api _api = Api();
+  late Api _api;
   Map<String, dynamic>? _dashboardData;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    // Get the API instance from AuthProvider
+    _api = Provider.of<AuthProvider>(context, listen: false).api;
     _fetchDashboard();
   }
 
   Future<void> _fetchDashboard() async {
     try {
       final response = await _api.getDashboard();
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        bool success = data['success'] ?? true;
+        
+        bool success = data['success'] ?? false;
+        
         if (success) {
           setState(() {
             _dashboardData = data['data'];
             _isLoading = false;
           });
         } else {
+          String message = data['message'] ?? 'Unknown error';
           setState(() {
             _dashboardData = null;
             _isLoading = false;
           });
+          _showError('Failed to load dashboard: $message');
         }
       } else {
         setState(() {
           _dashboardData = null;
           _isLoading = false;
         });
+        _showError('HTTP error: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
         _dashboardData = null;
         _isLoading = false;
       });
+      _showError('Error loading dashboard: $e');
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 5),
+      ),
+    );
   }
 
   @override

@@ -229,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 _passwordController.text,
                               );
                               Navigator.pushReplacementNamed(
-                                  context, '/dashboard');
+                                  context, '/home');
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

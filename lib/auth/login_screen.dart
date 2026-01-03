@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _passwordController.text,
                               );
                               Navigator.pushReplacementNamed(
-                                  context, '/dashboard');
+                                  context, '/home');
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

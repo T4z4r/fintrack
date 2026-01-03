@@ -10,6 +10,9 @@ class AuthProvider extends ChangeNotifier {
   String? _token;
   Map<String, dynamic>? _user;
 
+  // Public getter for API instance
+  Api get api => _api;
+
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     String? token = _prefs.getString('token');

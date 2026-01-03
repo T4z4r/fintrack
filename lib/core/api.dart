@@ -203,6 +203,81 @@ class Api {
     return await get('/debt-payments-summary');
   }
 
+  // Budgets
+  Future<http.Response> getBudgets() async {
+    return await get('/budgets');
+  }
+
+  Future<http.Response> createBudget(Map<String, dynamic> data) async {
+    return await post('/budgets', data);
+  }
+
+  Future<http.Response> getBudget(int id) async {
+    return await get('/budgets/$id');
+  }
+
+  Future<http.Response> updateBudget(int id, Map<String, dynamic> data) async {
+    return await put('/budgets/$id', data);
+  }
+
+  Future<http.Response> deleteBudget(int id) async {
+    return await delete('/budgets/$id');
+  }
+
+  // Budget Items
+  Future<http.Response> getBudgetItems() async {
+    return await get('/budget-items');
+  }
+
+  Future<http.Response> getBudgetItemsForBudget(int budgetId) async {
+    return await get('/budgets/$budgetId/items');
+  }
+
+  Future<http.Response> createBudgetItem(Map<String, dynamic> data) async {
+    return await post('/budget-items', data);
+  }
+
+  Future<http.Response> getBudgetItem(int id) async {
+    return await get('/budget-items/$id');
+  }
+
+  Future<http.Response> updateBudgetItem(int id, Map<String, dynamic> data) async {
+    return await put('/budget-items/$id', data);
+  }
+
+  Future<http.Response> updateBudgetItemSpentAmount(int id, Map<String, dynamic> data) async {
+    return await patch('/budget-items/$id/spent-amount', data);
+  }
+
+  Future<http.Response> deleteBudgetItem(int id) async {
+    return await delete('/budget-items/$id');
+  }
+
+  Future<http.Response> getBudgetItemsSummary() async {
+    return await get('/budget-items-summary');
+  }
+
+  // Investments
+  Future<http.Response> getInvestments() async {
+    return await get('/investments');
+  }
+
+  Future<http.Response> createInvestment(Map<String, dynamic> data) async {
+    return await post('/investments', data);
+  }
+
+  Future<http.Response> getInvestment(int id) async {
+    return await get('/investments/$id');
+  }
+
+  Future<http.Response> updateInvestment(int id, Map<String, dynamic> data) async {
+    return await put('/investments/$id', data);
+  }
+
+  Future<http.Response> deleteInvestment(int id) async {
+    return await delete('/investments/$id');
+  }
+
   // Sync methods
   Future<void> syncIncomes() async {
     if (!await _isOnline()) return;

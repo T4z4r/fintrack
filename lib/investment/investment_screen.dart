@@ -4,14 +4,14 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 
-class AssetScreen extends StatefulWidget {
+class InvestmentScreen extends StatefulWidget {
   @override
-  _AssetScreenState createState() => _AssetScreenState();
+  _InvestmentScreenState createState() => _InvestmentScreenState();
 }
 
-class _AssetScreenState extends State<AssetScreen> {
+class _InvestmentScreenState extends State<InvestmentScreen> {
   late Api _api;
-  List<Map<String, dynamic>> _assets = [];
+  List<Map<String, dynamic>> _investments = [];
   bool _isLoading = true;
 
   @override
@@ -19,17 +19,17 @@ class _AssetScreenState extends State<AssetScreen> {
     super.initState();
     // Get the API instance from AuthProvider
     _api = Provider.of<AuthProvider>(context, listen: false).api;
-    _fetchAssets();
+    _fetchInvestments();
   }
 
-  Future<void> _fetchAssets() async {
+  Future<void> _fetchInvestments() async {
     try {
-      final response = await _api.getAssets();
+      final response = await _api.getInvestments();
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           setState(() {
-            _assets = List<Map<String, dynamic>>.from(data['data']);
+            _investments = List<Map<String, dynamic>>.from(data['data']);
             _isLoading = false;
           });
         } else {
@@ -49,22 +49,22 @@ class _AssetScreenState extends State<AssetScreen> {
     }
   }
 
-  Future<void> _addAsset() async {
+  Future<void> _addInvestment() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AssetFormDialog(),
+      builder: (context) => InvestmentFormDialog(),
     );
     if (result != null) {
       try {
-        final response = await _api.createAsset(result);
+        final response = await _api.createInvestment(result);
         if (response.statusCode == 201) {
-          _fetchAssets();
+          _fetchInvestments();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Asset created successfully')),
+            SnackBar(content: Text('Investment created successfully')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create asset')),
+            SnackBar(content: Text('Failed to create investment')),
           );
         }
       } catch (e) {
@@ -75,12 +75,12 @@ class _AssetScreenState extends State<AssetScreen> {
     }
   }
 
-  Future<void> _deleteAsset(int id) async {
+  Future<void> _deleteInvestment(int id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Asset'),
-        content: Text('Are you sure you want to delete this asset?'),
+        title: Text('Delete Investment'),
+        content: Text('Are you sure you want to delete this investment?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -95,15 +95,15 @@ class _AssetScreenState extends State<AssetScreen> {
     );
     if (confirm == true) {
       try {
-        final response = await _api.deleteAsset(id);
+        final response = await _api.deleteInvestment(id);
         if (response.statusCode == 200) {
-          _fetchAssets();
+          _fetchInvestments();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Asset deleted successfully')),
+            SnackBar(content: Text('Investment deleted successfully')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete asset')),
+            SnackBar(content: Text('Failed to delete investment')),
           );
         }
       } catch (e) {
@@ -111,34 +111,6 @@ class _AssetScreenState extends State<AssetScreen> {
           SnackBar(content: Text('Error: $e')),
         );
       }
-    }
-  }
-
-  IconData _getAssetIcon(String? type) {
-    switch (type) {
-      case 'real_estate':
-        return Icons.home;
-      case 'vehicle':
-        return Icons.directions_car;
-      case 'jewelry':
-        return Icons.wallet_giftcard;
-      case 'other':
-      default:
-        return Icons.inventory;
-    }
-  }
-
-  Color _getAssetColor(String? type) {
-    switch (type) {
-      case 'real_estate':
-        return Colors.blue;
-      case 'vehicle':
-        return Colors.green;
-      case 'jewelry':
-        return Colors.purple;
-      case 'other':
-      default:
-        return Colors.orange;
     }
   }
 
@@ -155,7 +127,7 @@ class _AssetScreenState extends State<AssetScreen> {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Loading assets...',
+                    'Loading investments...',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 16,
@@ -164,19 +136,19 @@ class _AssetScreenState extends State<AssetScreen> {
                 ],
               ),
             )
-          : _assets.isEmpty
+          : _investments.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.inventory_outlined,
+                        Icons.show_chart_outlined,
                         size: 64,
                         color: Colors.grey[400],
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'No assets found',
+                        'No investments found',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -185,7 +157,7 @@ class _AssetScreenState extends State<AssetScreen> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Add your first asset to track your wealth',
+                        'Add your first investment to track your portfolio',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[500],
@@ -195,16 +167,17 @@ class _AssetScreenState extends State<AssetScreen> {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: _fetchAssets,
+                  onRefresh: _fetchInvestments,
                   color: Color(0xFF72140C),
                   child: ListView.builder(
                     padding: EdgeInsets.all(16),
-                    itemCount: _assets.length,
+                    itemCount: _investments.length,
                     itemBuilder: (context, index) {
-                      final asset = _assets[index];
-                      final value = asset['value'] ?? 0;
-                      final icon = _getAssetIcon(asset['type']);
-                      final color = _getAssetColor(asset['type']);
+                      final investment = _investments[index];
+                      final invested = investment['amount_invested'] ?? 0;
+                      final current = investment['current_value'] ?? 0;
+                      final profitLoss = current - invested;
+                      final isProfit = profitLoss >= 0;
 
                       return Card(
                         margin: EdgeInsets.only(bottom: 12),
@@ -222,12 +195,15 @@ class _AssetScreenState extends State<AssetScreen> {
                                   Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: color.withOpacity(0.1),
+                                      color:
+                                          (isProfit ? Colors.green : Colors.red)
+                                              .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
-                                      icon,
-                                      color: color,
+                                      Icons.show_chart,
+                                      color:
+                                          isProfit ? Colors.green : Colors.red,
                                       size: 20,
                                     ),
                                   ),
@@ -238,7 +214,8 @@ class _AssetScreenState extends State<AssetScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          asset['name'] ?? 'Unnamed Asset',
+                                          investment['name'] ??
+                                              'Unnamed Investment',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
@@ -246,7 +223,7 @@ class _AssetScreenState extends State<AssetScreen> {
                                         ),
                                         SizedBox(height: 4),
                                         Text(
-                                          '${asset['type']?.replaceAll('_', ' ') ?? 'N/A'} • Acquired: ${asset['acquisition_date'] ?? 'N/A'}',
+                                          investment['type'] ?? 'N/A',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[600],
@@ -257,7 +234,8 @@ class _AssetScreenState extends State<AssetScreen> {
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteAsset(asset['id']),
+                                    onPressed: () =>
+                                        _deleteInvestment(investment['id']),
                                   ),
                                 ],
                               ),
@@ -271,86 +249,85 @@ class _AssetScreenState extends State<AssetScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Current Value',
+                                        'Invested',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey[600],
                                         ),
                                       ),
                                       Text(
-                                        '\$${value.toStringAsFixed(2)}',
+                                        '\$${invested.toStringAsFixed(2)}',
                                         style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: color,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: color.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          icon,
-                                          size: 16,
-                                          color: color,
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'Current',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
                                         ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          asset['type']?.replaceAll('_', ' ') ??
-                                              'Unknown',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: color,
-                                          ),
+                                      ),
+                                      Text(
+                                        '\$${current.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              if (asset['description'] != null) ...[
-                                SizedBox(height: 12),
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey[200]!,
+                              SizedBox(height: 8),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (isProfit ? Colors.green : Colors.red)
+                                      .withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isProfit
+                                          ? Icons.trending_up
+                                          : Icons.trending_down,
+                                      size: 16,
+                                      color:
+                                          isProfit ? Colors.green : Colors.red,
                                     ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Description',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.grey[600],
-                                        ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      '${isProfit ? '+' : ''}\$${profitLoss.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isProfit
+                                            ? Colors.green
+                                            : Colors.red,
                                       ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        asset['description'],
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                    ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (investment['description'] != null) ...[
+                                SizedBox(height: 12),
+                                Text(
+                                  investment['description'],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -362,32 +339,33 @@ class _AssetScreenState extends State<AssetScreen> {
                   ),
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addAsset,
+        onPressed: _addInvestment,
         backgroundColor: Color(0xFF72140C),
         child: Icon(Icons.add, color: Colors.white),
-        tooltip: 'Add Asset',
+        tooltip: 'Add Investment',
       ),
     );
   }
 }
 
-class AssetFormDialog extends StatefulWidget {
+class InvestmentFormDialog extends StatefulWidget {
   @override
-  _AssetFormDialogState createState() => _AssetFormDialogState();
+  _InvestmentFormDialogState createState() => _InvestmentFormDialogState();
 }
 
-class _AssetFormDialogState extends State<AssetFormDialog> {
+class _InvestmentFormDialogState extends State<InvestmentFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _valueController = TextEditingController();
-  final _acquisitionDateController = TextEditingController();
+  final _amountInvestedController = TextEditingController();
+  final _currentValueController = TextEditingController();
+  final _dateInvestedController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _type = 'real_estate';
+  String _type = 'stocks';
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add Asset'),
+      title: Text('Add Investment'),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -398,30 +376,38 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                 controller: _nameController,
                 decoration: InputDecoration(labelText: 'Name'),
                 validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter name' : null,
+                    value?.isEmpty ?? true ? 'Please enter a name' : null,
               ),
               DropdownButtonFormField<String>(
                 value: _type,
                 decoration: InputDecoration(labelText: 'Type'),
-                items: ['real_estate', 'vehicle', 'jewelry', 'other']
+                items: ['stocks', 'bonds', 'real_estate', 'crypto', 'other']
                     .map((type) => DropdownMenuItem(
                           value: type,
-                          child: Text(type.replaceAll('_', ' ')),
+                          child: Text(type),
                         ))
                     .toList(),
                 onChanged: (value) => setState(() => _type = value!),
               ),
               TextFormField(
-                controller: _valueController,
-                decoration: InputDecoration(labelText: 'Value'),
+                controller: _amountInvestedController,
+                decoration: InputDecoration(labelText: 'Amount Invested'),
                 keyboardType: TextInputType.number,
                 validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter value' : null,
+                    value?.isEmpty ?? true ? 'Please enter amount' : null,
               ),
               TextFormField(
-                controller: _acquisitionDateController,
+                controller: _currentValueController,
+                decoration: InputDecoration(labelText: 'Current Value'),
+                keyboardType: TextInputType.number,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter current value'
+                    : null,
+              ),
+              TextFormField(
+                controller: _dateInvestedController,
                 decoration:
-                    InputDecoration(labelText: 'Acquisition Date (YYYY-MM-DD)'),
+                    InputDecoration(labelText: 'Date Invested (YYYY-MM-DD)'),
                 validator: (value) =>
                     value?.isEmpty ?? true ? 'Please enter date' : null,
               ),
@@ -445,8 +431,9 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
               Navigator.of(context).pop({
                 'name': _nameController.text,
                 'type': _type,
-                'value': double.parse(_valueController.text),
-                'acquisition_date': _acquisitionDateController.text,
+                'amount_invested': double.parse(_amountInvestedController.text),
+                'current_value': double.parse(_currentValueController.text),
+                'date_invested': _dateInvestedController.text,
                 'description': _descriptionController.text,
               });
             }
