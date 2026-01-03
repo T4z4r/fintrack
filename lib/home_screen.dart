@@ -4,10 +4,8 @@ import 'auth/auth_provider.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'income/income_screen.dart';
 import 'expense/expense_screen.dart';
-import 'asset/asset_screen.dart';
-import 'debt/debt_screen.dart';
 import 'budget/budget_screen.dart';
-import 'investment/investment_screen.dart';
+import 'more/more_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,18 +15,33 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
-    DashboardScreen(),
-    IncomeScreen(),
-    ExpenseScreen(),
-    CombinedAssetsDebtsScreen(),
-    CombinedBudgetInvestmentScreen(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _navigateToScreen(int screenIndex) {
+    setState(() {
+      _selectedIndex = screenIndex;
+    });
+  }
+
+  Widget _getScreenForIndex(int index) {
+    switch (index) {
+      case 0:
+        return DashboardScreen();
+      case 1:
+        return IncomeScreen();
+      case 2:
+        return ExpenseScreen();
+      case 3:
+        return BudgetScreen();
+      case 4:
+        return MoreScreen(onNavigate: _navigateToScreen);
+      default:
+        return DashboardScreen();
+    }
   }
 
   @override
@@ -67,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: _getScreenForIndex(_selectedIndex),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -97,14 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Expense',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance),
-              activeIcon: Icon(Icons.account_balance),
-              label: 'Assets & Debts',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.pie_chart),
               activeIcon: Icon(Icons.pie_chart),
-              label: 'Budget & Invest',
+              label: 'Budget',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.more_horiz),
+              activeIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
           currentIndex: _selectedIndex,
@@ -117,186 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
           elevation: 8,
         ),
       ),
-    );
-  }
-}
-
-// Combined screen for Assets and Debts
-class CombinedAssetsDebtsScreen extends StatefulWidget {
-  @override
-  _CombinedAssetsDebtsScreenState createState() => _CombinedAssetsDebtsScreenState();
-}
-
-class _CombinedAssetsDebtsScreenState extends State<CombinedAssetsDebtsScreen> {
-  int _selectedTab = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 0),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 0 ? Color(0xFF72140C) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.account_balance_wallet,
-                          color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Assets',
-                          style: TextStyle(
-                            color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 1),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 1 ? Color(0xFF72140C) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.money_off,
-                          color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Debts',
-                          style: TextStyle(
-                            color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _selectedTab == 0 ? AssetScreen() : DebtScreen(),
-        ),
-      ],
-    );
-  }
-}
-
-// Combined screen for Budget and Investment
-class CombinedBudgetInvestmentScreen extends StatefulWidget {
-  @override
-  _CombinedBudgetInvestmentScreenState createState() => _CombinedBudgetInvestmentScreenState();
-}
-
-class _CombinedBudgetInvestmentScreenState extends State<CombinedBudgetInvestmentScreen> {
-  int _selectedTab = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 0),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 0 ? Color(0xFF72140C) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.pie_chart,
-                          color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Budgets',
-                          style: TextStyle(
-                            color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 1),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 1 ? Color(0xFF72140C) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.show_chart,
-                          color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Investments',
-                          style: TextStyle(
-                            color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _selectedTab == 0 ? BudgetScreen() : InvestmentScreen(),
-        ),
-      ],
     );
   }
 }
