@@ -9,17 +9,21 @@ import 'expense/expense_screen.dart';
 import 'asset/asset_screen.dart';
 import 'debt/debt_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authProvider = AuthProvider();
+  await authProvider.initialize();
   runApp(
     ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
-      child: const MyApp(),
+      create: (_) => authProvider,
+      child: MyApp(isLoggedIn: authProvider.isLoggedIn),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +49,7 @@ class MyApp extends StatelessWidget {
           shadowColor: Colors.grey,
         ),
       ),
-      initialRoute: '/login',
+      initialRoute: isLoggedIn ? '/dashboard' : '/login',
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),

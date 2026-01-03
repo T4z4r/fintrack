@@ -23,13 +23,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final response = await _api.getDashboard();
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        bool success = data['success'] ?? true;
+        if (success) {
+          setState(() {
+            _dashboardData = data['data'];
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _dashboardData = null;
+            _isLoading = false;
+          });
+        }
+      } else {
         setState(() {
-          _dashboardData = json.decode(response.body);
+          _dashboardData = null;
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
+        _dashboardData = null;
         _isLoading = false;
       });
     }
@@ -62,12 +77,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 padding: EdgeInsets.all(16.0),
                                 child: Column(
                                   children: [
-                                    Icon(Icons.trending_up, size: 48, color: Colors.green),
+                                    Icon(Icons.trending_up,
+                                        size: 48, color: Colors.green),
                                     SizedBox(height: 8),
-                                    Text('Total Income', style: TextStyle(fontSize: 16)),
+                                    Text('Total Income',
+                                        style: TextStyle(fontSize: 16)),
                                     Text(
-                                      '\$${_dashboardData!['total_income'] ?? 0}',
-                                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
+                                      '\$${_dashboardData!['financial_summary']?['total_income'] ?? 0}',
+                                      style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green),
                                     ),
                                   ],
                                 ),
@@ -82,12 +102,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 padding: EdgeInsets.all(16.0),
                                 child: Column(
                                   children: [
-                                    Icon(Icons.trending_down, size: 48, color: Colors.red),
+                                    Icon(Icons.trending_down,
+                                        size: 48, color: Colors.red),
                                     SizedBox(height: 8),
-                                    Text('Total Expenses', style: TextStyle(fontSize: 16)),
+                                    Text('Total Expenses',
+                                        style: TextStyle(fontSize: 16)),
                                     Text(
-                                      '\$${_dashboardData!['total_expenses'] ?? 0}',
-                                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
+                                      '\$${_dashboardData!['financial_summary']?['total_expenses'] ?? 0}',
+                                      style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red),
                                     ),
                                   ],
                                 ),
@@ -103,12 +128,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              Icon(Icons.account_balance, size: 48, color: Colors.blue),
+                              Icon(Icons.account_balance,
+                                  size: 48, color: Colors.blue),
                               SizedBox(height: 8),
                               Text('Net Worth', style: TextStyle(fontSize: 16)),
                               Text(
-                                '\$${_dashboardData!['net_worth'] ?? 0}',
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
+                                '\$${_dashboardData!['financial_summary']?['net_worth'] ?? 0}',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue),
                               ),
                             ],
                           ),
