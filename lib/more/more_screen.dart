@@ -13,7 +13,8 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
-  int _selectedFeature = 0; // 0 = overview, 1 = investments, 2 = debts, 3 = assets
+  int _selectedFeature =
+      0; // 0 = overview, 1 = investments, 2 = debts, 3 = assets
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +46,7 @@ class _MoreScreenState extends State<MoreScreen> {
               ],
             ),
           ),
-          
+
           // Content area
           Expanded(
             child: _getFeatureContent(),
@@ -57,7 +58,7 @@ class _MoreScreenState extends State<MoreScreen> {
 
   Widget _buildTabButton(int index, String label, IconData icon) {
     final bool isSelected = _selectedFeature == index;
-    
+
     return GestureDetector(
       onTap: () => setState(() => _selectedFeature = index),
       child: Container(
@@ -108,7 +109,7 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 
   Widget _buildOverview() {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,9 +117,9 @@ class _MoreScreenState extends State<MoreScreen> {
           Text(
             'Additional Features',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF72140C),
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF72140C),
+                ),
           ),
           SizedBox(height: 8),
           Text(
@@ -129,7 +130,7 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
           ),
           SizedBox(height: 32),
-          
+
           // Quick access cards
           Text(
             'Quick Access',
@@ -140,7 +141,7 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
           ),
           SizedBox(height: 16),
-          
+
           _buildQuickAccessCard(
             icon: Icons.show_chart,
             title: 'Investment Portfolio',
@@ -149,7 +150,7 @@ class _MoreScreenState extends State<MoreScreen> {
             onTap: () => setState(() => _selectedFeature = 1),
           ),
           SizedBox(height: 12),
-          
+
           _buildQuickAccessCard(
             icon: Icons.money_off,
             title: 'Debt Management',
@@ -158,7 +159,7 @@ class _MoreScreenState extends State<MoreScreen> {
             onTap: () => setState(() => _selectedFeature = 2),
           ),
           SizedBox(height: 12),
-          
+
           _buildQuickAccessCard(
             icon: Icons.inventory,
             title: 'Asset Tracking',
@@ -167,7 +168,7 @@ class _MoreScreenState extends State<MoreScreen> {
             onTap: () => setState(() => _selectedFeature = 3),
           ),
           SizedBox(height: 32),
-          
+
           // Info card
           Card(
             elevation: 2,
@@ -210,6 +211,7 @@ class _MoreScreenState extends State<MoreScreen> {
               ),
             ),
           ),
+          SizedBox(height: 20), // Bottom padding for better UX
         ],
       ),
     );
@@ -222,31 +224,32 @@ class _MoreScreenState extends State<MoreScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark ? theme.cardColor : const Color(0xFFFBF5F5),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.primaryColor,
+              width: 0.5,
+            ),
+          ),
           child: Row(
             children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20,
-                ),
+              Icon(
+                icon,
+                color: theme.primaryColor,
+                size: 28,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,10 +259,10 @@ class _MoreScreenState extends State<MoreScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+                        color: theme.textTheme.bodyLarge?.color,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
