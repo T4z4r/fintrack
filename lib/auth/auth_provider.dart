@@ -20,11 +20,15 @@ class AuthProvider extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      _token = data['data']['token'];
-      _api.setToken(_token!);
-      _user = data['data']['user'];
-      _isLoggedIn = true;
-      notifyListeners();
+      if (data['success'] == true) {
+        _token = data['data']['token'];
+        _api.setToken(_token!);
+        _user = data['data']['user'];
+        _isLoggedIn = true;
+        notifyListeners();
+      } else {
+        throw Exception(data['message'] ?? 'Login failed');
+      }
     } else {
       throw Exception('Login failed');
     }
@@ -40,11 +44,15 @@ class AuthProvider extends ChangeNotifier {
 
     if (response.statusCode == 201) {
       final data = json.decode(response.body);
-      _token = data['data']['token'];
-      _api.setToken(_token!);
-      _user = data['data']['user'];
-      _isLoggedIn = true;
-      notifyListeners();
+      if (data['success'] == true) {
+        _token = data['data']['token'];
+        _api.setToken(_token!);
+        _user = data['data']['user'];
+        _isLoggedIn = true;
+        notifyListeners();
+      } else {
+        throw Exception(data['message'] ?? 'Registration failed');
+      }
     } else {
       throw Exception('Registration failed');
     }
@@ -61,7 +69,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> getCurrentUser() async {
     final response = await _api.getUser();
     if (response.statusCode == 200) {
-      final data = response.body as Map<String, dynamic>;
+      final data = json.decode(response.body);
       _user = data['data'];
       notifyListeners();
     }

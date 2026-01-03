@@ -17,9 +17,9 @@ class Api {
   }
 
   Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    if (_token != null) 'Authorization': 'Bearer $_token',
-  };
+        'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      };
 
   Future<http.Response> get(String endpoint) async {
     final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
@@ -28,17 +28,18 @@ class Api {
 
   Future<http.Response> post(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
-    return await http.post(url, headers: _headers, body: data);
+    return await http.post(url, headers: _headers, body: json.encode(data));
   }
 
   Future<http.Response> put(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
-    return await http.put(url, headers: _headers, body: data);
+    return await http.put(url, headers: _headers, body: json.encode(data));
   }
 
-  Future<http.Response> patch(String endpoint, Map<String, dynamic> data) async {
+  Future<http.Response> patch(
+      String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
-    return await http.patch(url, headers: _headers, body: data);
+    return await http.patch(url, headers: _headers, body: json.encode(data));
   }
 
   Future<http.Response> delete(String endpoint) async {
@@ -81,7 +82,8 @@ class Api {
     return await get('/income-sources/$id');
   }
 
-  Future<http.Response> updateIncomeSource(int id, Map<String, dynamic> data) async {
+  Future<http.Response> updateIncomeSource(
+      int id, Map<String, dynamic> data) async {
     return await put('/income-sources/$id', data);
   }
 
@@ -188,7 +190,8 @@ class Api {
     return await get('/debt-payments/$id');
   }
 
-  Future<http.Response> updateDebtPayment(int id, Map<String, dynamic> data) async {
+  Future<http.Response> updateDebtPayment(
+      int id, Map<String, dynamic> data) async {
     return await put('/debt-payments/$id', data);
   }
 
