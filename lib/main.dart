@@ -26,8 +26,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'FinTrack',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF72140C)),
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(0xFF72140C),
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF72140C),
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          ),
+        ),
+        cardTheme: CardTheme(
+          color: Colors.white,
+          shadowColor: Colors.grey,
+        ),
       ),
       initialRoute: '/login',
       routes: {
