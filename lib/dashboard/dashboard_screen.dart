@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -67,6 +68,170 @@ class _DashboardScreenState extends State<DashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Modern welcome section widget
+  Widget _buildWelcomeSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Get current time for greeting
+    final now = DateTime.now();
+    final hour = now.hour;
+    String greeting;
+
+    if (hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+    } else {
+      greeting = 'Good Evening';
+    }
+
+    final currentDate = DateFormat('EEEE, MMMM d, yyyy').format(now);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [Color(0xFF1A1A1A), Color(0xFF2D2D2D)]
+              : [Color(0xFF72140C), Color(0xFF8B1A0E)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        greeting,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Welcome back to FinTrack',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    currentDate,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: Colors.amber,
+                    size: 20,
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Financial Tip',
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Track your expenses daily to better understand your spending patterns and save more effectively.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -139,10 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: EdgeInsets.all(16.0),
                 child: ListView(
                   children: [
-                    Text(
-                      'Welcome to FinTrack',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
+                    _buildWelcomeSection(),
                     SizedBox(height: 24),
                     Text('Financial Summary',
                         style: Theme.of(context).textTheme.headlineSmall),
