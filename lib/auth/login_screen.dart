@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'auth_provider.dart';
 
@@ -10,6 +11,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,33 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             ElevatedButton(
-              onPressed: () async {
-                await AuthProvider().login(_emailController.text, _passwordController.text);
-                Navigator.pushReplacementNamed(context, '/dashboard');
+              onPressed: _isLoading ? null : () async {
+                setState(() {
+                  _isLoading = true;
+                });
+                try {
+                  await Provider.of<AuthProvider>(context, listen: false).login(
+                    _emailController.text,
+                    _passwordController.text,
+                  );
+                  Navigator.pushReplacementNamed(context, '/dashboard');
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Login failed: $e')),
+                  );
+                } finally {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                }
               },
-              child: Text('Login'),
+              child: _isLoading ? CircularProgressIndicator() : Text('Login'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/register');
+              },
+              child: Text('Don\'t have an account? Register'),
             ),
           ],
         ),

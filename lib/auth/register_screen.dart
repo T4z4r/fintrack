@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'auth_provider.dart';
 
@@ -11,6 +12,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +36,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
               obscureText: true,
             ),
             ElevatedButton(
-              onPressed: () async {
-                await AuthProvider().register(_nameController.text, _emailController.text, _passwordController.text);
-                Navigator.pushReplacementNamed(context, '/dashboard');
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      try {
+                        await Provider.of<AuthProvider>(context, listen: false)
+                            .register(
+                          _nameController.text,
+                          _emailController.text,
+                          _passwordController.text,
+                        );
+                        Navigator.pushReplacementNamed(context, '/dashboard');
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Registration failed: $e')),
+                        );
+                      } finally {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
+                    },
+              child:
+                  _isLoading ? CircularProgressIndicator() : Text('Register'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/login');
               },
-              child: Text('Register'),
+              child: Text('Already have an account? Login'),
             ),
           ],
         ),

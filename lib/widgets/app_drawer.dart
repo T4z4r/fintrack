@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../auth/auth_provider.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -28,6 +30,14 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             title: Text('Debt'),
             onTap: () => Navigator.pushNamed(context, '/debt'),
+          ),
+          Divider(),
+          ListTile(
+            title: Text('Logout'),
+            onTap: () async {
+              await Provider.of<AuthProvider>(context, listen: false).logout();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
           ),
         ],
       ),
