@@ -8,6 +8,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -20,6 +21,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           children: [
             TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: 'Email'),
             ),
@@ -30,7 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                await AuthProvider().register(_emailController.text, _passwordController.text);
+                await AuthProvider().register(_nameController.text, _emailController.text, _passwordController.text);
                 Navigator.pushReplacementNamed(context, '/dashboard');
               },
               child: Text('Register'),
