@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import '../core/database_helper.dart';
 import '../core/api.dart';
 
 class IncomeScreen extends StatefulWidget {
@@ -8,30 +8,44 @@ class IncomeScreen extends StatefulWidget {
 }
 
 class _IncomeScreenState extends State<IncomeScreen> {
+  final DatabaseHelper _db = DatabaseHelper();
   final Api _api = Api();
-  List<dynamic> _incomes = [];
+  List<Map<String, dynamic>> _incomes = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchIncomes();
+    _syncIncomes();
   }
 
   Future<void> _fetchIncomes() async {
     try {
-      final response = await _api.getIncomes();
-      if (response.statusCode == 200) {
-        setState(() {
-          _incomes = json.decode(response.body)['data'] ?? [];
-          _isLoading = false;
-        });
-      }
+      _incomes = await _db.getIncomes();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _syncIncomes() async {
+    await _api.syncIncomes();
+  }
+
+  Future<void> _addIncome() async {
+    // Simple add for demo
+    await _db.insertIncome({
+      'amount': 1000.0,
+      'date': '2024-01-01',
+      'description': 'Test Income',
+      'synced': 0,
+    });
+    _fetchIncomes();
   }
 
   @override
@@ -51,9 +65,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to add income screen or show dialog
-        },
+        onPressed: _addIncome,
         child: Icon(Icons.add),
       ),
     );

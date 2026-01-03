@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import '../core/database_helper.dart';
 import '../core/api.dart';
 
 class ExpenseScreen extends StatefulWidget {
@@ -8,30 +8,44 @@ class ExpenseScreen extends StatefulWidget {
 }
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
+  final DatabaseHelper _db = DatabaseHelper();
   final Api _api = Api();
-  List<dynamic> _expenses = [];
+  List<Map<String, dynamic>> _expenses = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchExpenses();
+    _syncExpenses();
   }
 
   Future<void> _fetchExpenses() async {
     try {
-      final response = await _api.getExpenses();
-      if (response.statusCode == 200) {
-        setState(() {
-          _expenses = json.decode(response.body)['data'] ?? [];
-          _isLoading = false;
-        });
-      }
+      _expenses = await _db.getExpenses();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _syncExpenses() async {
+    await _api.syncExpenses();
+  }
+
+  Future<void> _addExpense() async {
+    await _db.insertExpense({
+      'amount': 100.0,
+      'category': 'food',
+      'date': '2024-01-01',
+      'description': 'Test Expense',
+      'synced': 0,
+    });
+    _fetchExpenses();
   }
 
   @override
@@ -51,9 +65,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add expense
-        },
+        onPressed: _addExpense,
         child: Icon(Icons.add),
       ),
     );

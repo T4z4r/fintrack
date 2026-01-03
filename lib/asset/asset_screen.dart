@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import '../core/database_helper.dart';
 import '../core/api.dart';
 
 class AssetScreen extends StatefulWidget {
@@ -8,30 +8,45 @@ class AssetScreen extends StatefulWidget {
 }
 
 class _AssetScreenState extends State<AssetScreen> {
+  final DatabaseHelper _db = DatabaseHelper();
   final Api _api = Api();
-  List<dynamic> _assets = [];
+  List<Map<String, dynamic>> _assets = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchAssets();
+    _syncAssets();
   }
 
   Future<void> _fetchAssets() async {
     try {
-      final response = await _api.getAssets();
-      if (response.statusCode == 200) {
-        setState(() {
-          _assets = json.decode(response.body)['data'] ?? [];
-          _isLoading = false;
-        });
-      }
+      _assets = await _db.getAssets();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _syncAssets() async {
+    await _api.syncAssets();
+  }
+
+  Future<void> _addAsset() async {
+    await _db.insertAsset({
+      'name': 'Test Asset',
+      'type': 'property',
+      'value': 10000.0,
+      'acquisition_date': '2024-01-01',
+      'description': 'Test Asset',
+      'synced': 0,
+    });
+    _fetchAssets();
   }
 
   @override
@@ -51,9 +66,7 @@ class _AssetScreenState extends State<AssetScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add asset
-        },
+        onPressed: _addAsset,
         child: Icon(Icons.add),
       ),
     );

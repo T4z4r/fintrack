@@ -1,11 +1,19 @@
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'constants.dart';
+import 'database_helper.dart';
 
 class Api {
   String? _token;
+  final DatabaseHelper _db = DatabaseHelper();
 
   void setToken(String token) {
     _token = token;
+  }
+
+  Future<bool> _isOnline() async {
+    // Assume connectivity check, for now return true
+    return true; // Replace with actual check
   }
 
   Map<String, String> get _headers => {
@@ -190,5 +198,66 @@ class Api {
 
   Future<http.Response> getDebtPaymentsSummary() async {
     return await get('/debt-payments-summary');
+  }
+
+  // Sync methods
+  Future<void> syncIncomes() async {
+    if (!await _isOnline()) return;
+    final unsynced = await _db.getUnsyncedIncomes();
+    for (var income in unsynced) {
+      try {
+        final response = await createIncome(income);
+        if (response.statusCode == 201) {
+          await _db.markIncomeSynced(income['id']);
+        }
+      } catch (e) {
+        // Handle error
+      }
+    }
+  }
+
+  Future<void> syncExpenses() async {
+    if (!await _isOnline()) return;
+    final unsynced = await _db.getUnsyncedExpenses();
+    for (var expense in unsynced) {
+      try {
+        final response = await createExpense(expense);
+        if (response.statusCode == 201) {
+          await _db.markExpenseSynced(expense['id']);
+        }
+      } catch (e) {
+        // Handle error
+      }
+    }
+  }
+
+  Future<void> syncAssets() async {
+    if (!await _isOnline()) return;
+    final unsynced = await _db.getUnsyncedAssets();
+    for (var asset in unsynced) {
+      try {
+        final response = await createAsset(asset);
+        if (response.statusCode == 201) {
+          await _db.markAssetSynced(asset['id']);
+        }
+      } catch (e) {
+        // Handle error
+      }
+    }
+  }
+
+  Future<void> syncDebts() async {
+    if (!await _isOnline()) return;
+    final unsynced = await _db.getUnsyncedDebts();
+    for (var debt in unsynced) {
+      try {
+        final response = await createDebt(debt);
+        if (response.statusCode == 201) {
+          await _db.markDebtSynced(debt['id']);
+        }
+      } catch (e) {
+        // Handle error
+      }
+    }
   }
 }

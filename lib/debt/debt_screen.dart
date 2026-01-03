@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import '../core/database_helper.dart';
 import '../core/api.dart';
 
 class DebtScreen extends StatefulWidget {
@@ -8,30 +8,44 @@ class DebtScreen extends StatefulWidget {
 }
 
 class _DebtScreenState extends State<DebtScreen> {
+  final DatabaseHelper _db = DatabaseHelper();
   final Api _api = Api();
-  List<dynamic> _debts = [];
+  List<Map<String, dynamic>> _debts = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchDebts();
+    _syncDebts();
   }
 
   Future<void> _fetchDebts() async {
     try {
-      final response = await _api.getDebts();
-      if (response.statusCode == 200) {
-        setState(() {
-          _debts = json.decode(response.body)['data'] ?? [];
-          _isLoading = false;
-        });
-      }
+      _debts = await _db.getDebts();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _syncDebts() async {
+    await _api.syncDebts();
+  }
+
+  Future<void> _addDebt() async {
+    await _db.insertDebt({
+      'name': 'Test Debt',
+      'amount': 5000.0,
+      'due_date': '2025-01-01',
+      'status': 'pending',
+      'synced': 0,
+    });
+    _fetchDebts();
   }
 
   @override
@@ -51,9 +65,7 @@ class _DebtScreenState extends State<DebtScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add debt
-        },
+        onPressed: _addDebt,
         child: Icon(Icons.add),
       ),
     );
