@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class ExpenseScreen extends StatefulWidget {
   @override
@@ -14,12 +15,28 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   List<Map<String, dynamic>> _expenses = [];
   bool _isLoading = true;
 
+  // Form controllers for bottom sheet
+  final _formKey = GlobalKey<FormState>();
+  final _amountController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _dateController = TextEditingController();
+  final _descriptionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     // Get the API instance from AuthProvider
     _api = Provider.of<AuthProvider>(context, listen: false).api;
     _fetchExpenses();
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _categoryController.dispose();
+    _dateController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchExpenses() async {
@@ -50,10 +67,29 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   Future<void> _addExpense() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _amountController.clear();
+    _categoryController.clear();
+    _dateController.clear();
+    _descriptionController.clear();
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => ExpenseFormDialog(),
+      title: 'Add Expense',
+      formFields: [
+        _buildAmountField(),
+        SizedBox(height: 16),
+        _buildCategoryField(),
+        SizedBox(height: 16),
+        _buildDateField(),
+        SizedBox(height: 16),
+        _buildDescriptionField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: _submitExpense,
+      submitText: 'Add Expense',
     );
+
     if (result != null) {
       try {
         final response = await _api.createExpense(result);
@@ -72,6 +108,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           SnackBar(content: Text('Error: $e')),
         );
       }
+    }
+  }
+
+  void _submitExpense() {
+    if (_formKey.currentState?.validate() ?? false) {
+      Navigator.of(context).pop({
+        'amount': double.parse(_amountController.text),
+        'category': _categoryController.text,
+        'date': _dateController.text,
+        'description': _descriptionController.text,
+      });
     }
   }
 
@@ -112,6 +159,72 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         );
       }
     }
+  }
+
+  Widget _buildAmountField() {
+    return TextFormField(
+      controller: _amountController,
+      decoration: InputDecoration(
+        labelText: 'Amount',
+        prefixIcon: Icon(Icons.attach_money),
+        prefixText: '\$',
+      ),
+      keyboardType: TextInputType.number,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter amount';
+        }
+        if (double.tryParse(value!) == null) {
+          return 'Please enter a valid number';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildCategoryField() {
+    return TextFormField(
+      controller: _categoryController,
+      decoration: InputDecoration(
+        labelText: 'Category',
+        prefixIcon: Icon(Icons.category),
+      ),
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter category';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDateField() {
+    return TextFormField(
+      controller: _dateController,
+      decoration: InputDecoration(
+        labelText: 'Date',
+        prefixIcon: Icon(Icons.calendar_today),
+        hintText: 'YYYY-MM-DD',
+      ),
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter date';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return TextFormField(
+      controller: _descriptionController,
+      decoration: InputDecoration(
+        labelText: 'Description',
+        prefixIcon: Icon(Icons.description),
+        alignLabelWithHint: true,
+      ),
+      maxLines: 3,
+    );
   }
 
   @override
@@ -277,79 +390,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         child: Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Expense',
       ),
-    );
-  }
-}
-
-class ExpenseFormDialog extends StatefulWidget {
-  @override
-  _ExpenseFormDialogState createState() => _ExpenseFormDialogState();
-}
-
-class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _dateController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Expense'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter amount' : null,
-              ),
-              TextFormField(
-                controller: _categoryController,
-                decoration: InputDecoration(labelText: 'Category'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter category' : null,
-              ),
-              TextFormField(
-                controller: _dateController,
-                decoration: InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter date' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'amount': double.parse(_amountController.text),
-                'category': _categoryController.text,
-                'date': _dateController.text,
-                'description': _descriptionController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
     );
   }
 }

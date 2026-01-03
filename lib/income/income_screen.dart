@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class IncomeScreen extends StatefulWidget {
   @override
@@ -15,12 +16,27 @@ class _IncomeScreenState extends State<IncomeScreen> {
   List<Map<String, dynamic>> _incomeSources = [];
   bool _isLoading = true;
 
+  // Form controllers for bottom sheet
+  final _formKey = GlobalKey<FormState>();
+  final _amountController = TextEditingController();
+  final _dateController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  int? _incomeSourceId;
+
   @override
   void initState() {
     super.initState();
     // Get the API instance from AuthProvider
     _api = Provider.of<AuthProvider>(context, listen: false).api;
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _dateController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -38,6 +54,10 @@ class _IncomeScreenState extends State<IncomeScreen> {
         if (data['success'] == true) {
           setState(() {
             _incomeSources = List<Map<String, dynamic>>.from(data['data']);
+            // Set default income source if available
+            if (_incomeSources.isNotEmpty && _incomeSourceId == null) {
+              _incomeSourceId = _incomeSources.first['id'];
+            }
           });
         }
       }
@@ -74,28 +94,37 @@ class _IncomeScreenState extends State<IncomeScreen> {
   }
 
   Future<void> _addIncome() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _amountController.clear();
+    _dateController.clear();
+    _descriptionController.clear();
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => IncomeFormDialog(incomeSources: _incomeSources),
+      title: 'Add Income',
+      formFields: [
+        _buildIncomeSourceDropdown(),
+        SizedBox(height: 16),
+        _buildAmountField(),
+        SizedBox(height: 16),
+        _buildDateField(),
+        SizedBox(height: 16),
+        _buildDescriptionField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: _submitIncome,
+      submitText: 'Add Income',
     );
-    if (result != null) {
-      try {
-        final response = await _api.createIncome(result);
-        if (response.statusCode == 201) {
-          _fetchIncomes();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Income created successfully')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create income')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+  }
+
+  void _submitIncome() {
+    if (_formKey.currentState?.validate() ?? false) {
+      Navigator.of(context).pop({
+        'income_source_id': _incomeSourceId ?? _incomeSources.first['id'],
+        'amount': double.parse(_amountController.text),
+        'date': _dateController.text,
+        'description': _descriptionController.text,
+      });
     }
   }
 
@@ -136,6 +165,94 @@ class _IncomeScreenState extends State<IncomeScreen> {
         );
       }
     }
+  }
+
+  Widget _buildIncomeSourceDropdown() {
+    return FormField<int>(
+      builder: (FormFieldState<int> state) {
+        return InputDecorator(
+          decoration: InputDecoration(
+            labelText: 'Income Source',
+            prefixIcon: Icon(Icons.work),
+            errorText: state.hasError ? state.errorText : null,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: _incomeSourceId,
+              isExpanded: true,
+              items: _incomeSources.map((source) {
+                return DropdownMenuItem<int>(
+                  value: source['id'],
+                  child: Text(source['name'] ?? 'Unknown'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _incomeSourceId = value;
+                });
+                state.didChange(value);
+              },
+            ),
+          ),
+        );
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Please select an income source';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildAmountField() {
+    return TextFormField(
+      controller: _amountController,
+      decoration: InputDecoration(
+        labelText: 'Amount',
+        prefixIcon: Icon(Icons.attach_money),
+        prefixText: '\$',
+      ),
+      keyboardType: TextInputType.number,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter amount';
+        }
+        if (double.tryParse(value!) == null) {
+          return 'Please enter a valid number';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDateField() {
+    return TextFormField(
+      controller: _dateController,
+      decoration: InputDecoration(
+        labelText: 'Date',
+        prefixIcon: Icon(Icons.calendar_today),
+        hintText: 'YYYY-MM-DD',
+      ),
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter date';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return TextFormField(
+      controller: _descriptionController,
+      decoration: InputDecoration(
+        labelText: 'Description',
+        prefixIcon: Icon(Icons.description),
+        alignLabelWithHint: true,
+      ),
+      maxLines: 3,
+    );
   }
 
   @override
@@ -259,8 +376,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   SizedBox(height: 4),
                                   IconButton(
                                     icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () =>
-                                        _deleteIncome(income['id']),
+                                    onPressed: () => _deleteIncome(income['id']),
                                   ),
                                 ],
                               ),
@@ -277,97 +393,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
         child: Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Income',
       ),
-    );
-  }
-}
-
-class IncomeFormDialog extends StatefulWidget {
-  final List<Map<String, dynamic>> incomeSources;
-
-  const IncomeFormDialog({Key? key, required this.incomeSources})
-      : super(key: key);
-
-  @override
-  _IncomeFormDialogState createState() => _IncomeFormDialogState();
-}
-
-class _IncomeFormDialogState extends State<IncomeFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _dateController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  int? _incomeSourceId;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Income'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.incomeSources.isNotEmpty)
-                DropdownButtonFormField<int>(
-                  decoration: InputDecoration(labelText: 'Income Source'),
-                  value: _incomeSourceId,
-                  items: widget.incomeSources.map((source) {
-                    return DropdownMenuItem<int>(
-                      value: source['id'],
-                      child: Text(source['name'] ?? 'Unknown'),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _incomeSourceId = value;
-                    });
-                  },
-                  validator: (value) =>
-                      value == null ? 'Please select income source' : null,
-                ),
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter amount' : null,
-              ),
-              TextFormField(
-                controller: _dateController,
-                decoration: InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter date' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'income_source_id':
-                    _incomeSourceId ?? widget.incomeSources.first['id'],
-                'amount': double.parse(_amountController.text),
-                'date': _dateController.text,
-                'description': _descriptionController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
     );
   }
 }
