@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/bottom_sheet_form.dart';
+import '../widgets/date_picker_field.dart';
 
 class IncomeScreen extends StatefulWidget {
   @override
@@ -102,6 +104,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
       title: 'Add Income',
+      formKey: _formKey,
       formFields: [
         _buildIncomeSourceDropdown(),
         SizedBox(height: 16),
@@ -112,20 +115,16 @@ class _IncomeScreenState extends State<IncomeScreen> {
         _buildDescriptionField(),
       ],
       onCancel: () => Navigator.of(context).pop(),
-      onSubmit: _submitIncome,
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'income_source_id': _incomeSourceId ?? _incomeSources.first['id'],
+          'amount': double.parse(_amountController.text),
+          'date': _dateController.text,
+          'description': _descriptionController.text,
+        });
+      },
       submitText: 'Add Income',
     );
-  }
-
-  void _submitIncome() {
-    if (_formKey.currentState?.validate() ?? false) {
-      Navigator.of(context).pop({
-        'income_source_id': _incomeSourceId ?? _incomeSources.first['id'],
-        'amount': double.parse(_amountController.text),
-        'date': _dateController.text,
-        'description': _descriptionController.text,
-      });
-    }
   }
 
   Future<void> _deleteIncome(int id) async {
@@ -227,16 +226,14 @@ class _IncomeScreenState extends State<IncomeScreen> {
   }
 
   Widget _buildDateField() {
-    return TextFormField(
+    return DatePickerField(
+      labelText: 'Date',
+      hintText: 'YYYY-MM-DD',
       controller: _dateController,
-      decoration: InputDecoration(
-        labelText: 'Date',
-        prefixIcon: Icon(Icons.calendar_today),
-        hintText: 'YYYY-MM-DD',
-      ),
+      prefixIcon: Icons.calendar_today,
       validator: (value) {
         if (value?.isEmpty ?? true) {
-          return 'Please enter date';
+          return 'Please select a date';
         }
         return null;
       },
@@ -376,7 +373,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   SizedBox(height: 4),
                                   IconButton(
                                     icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteIncome(income['id']),
+                                    onPressed: () =>
+                                        _deleteIncome(income['id']),
                                   ),
                                 ],
                               ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/bottom_sheet_form.dart';
+import '../widgets/date_picker_field.dart';
 
 class ExpenseScreen extends StatefulWidget {
   @override
@@ -76,6 +78,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
       title: 'Add Expense',
+      formKey: _formKey,
       formFields: [
         _buildAmountField(),
         SizedBox(height: 16),
@@ -86,7 +89,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         _buildDescriptionField(),
       ],
       onCancel: () => Navigator.of(context).pop(),
-      onSubmit: _submitExpense,
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'amount': double.parse(_amountController.text),
+          'category': _categoryController.text,
+          'date': _dateController.text,
+          'description': _descriptionController.text,
+        });
+      },
       submitText: 'Add Expense',
     );
 
@@ -108,17 +118,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           SnackBar(content: Text('Error: $e')),
         );
       }
-    }
-  }
-
-  void _submitExpense() {
-    if (_formKey.currentState?.validate() ?? false) {
-      Navigator.of(context).pop({
-        'amount': double.parse(_amountController.text),
-        'category': _categoryController.text,
-        'date': _dateController.text,
-        'description': _descriptionController.text,
-      });
     }
   }
 
@@ -199,16 +198,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   Widget _buildDateField() {
-    return TextFormField(
+    return DatePickerField(
+      labelText: 'Date',
+      hintText: 'YYYY-MM-DD',
       controller: _dateController,
-      decoration: InputDecoration(
-        labelText: 'Date',
-        prefixIcon: Icon(Icons.calendar_today),
-        hintText: 'YYYY-MM-DD',
-      ),
+      prefixIcon: Icons.calendar_today,
       validator: (value) {
         if (value?.isEmpty ?? true) {
-          return 'Please enter date';
+          return 'Please select a date';
         }
         return null;
       },
