@@ -50,24 +50,17 @@ class _DebtScreenState extends State<DebtScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Debt')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _debts.length,
-              itemBuilder: (context, index) {
-                final debt = _debts[index];
-                return ListTile(
-                  title: Text(debt['name'] ?? 'No name'),
-                  subtitle: Text('Amount: ${debt['amount']}'),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addDebt,
-        child: Icon(Icons.add),
-      ),
-    );
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            itemCount: _debts.length,
+            itemBuilder: (context, index) {
+              final debt = _debts[index];
+              return ListTile(
+                title: Text(debt['name'] ?? 'No name'),
+                subtitle: Text('Amount: ${debt['amount']}'),
+              );
+            },
+          );
   }
 }

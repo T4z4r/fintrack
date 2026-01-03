@@ -50,24 +50,17 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Income')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _incomes.length,
-              itemBuilder: (context, index) {
-                final income = _incomes[index];
-                return ListTile(
-                  title: Text(income['description'] ?? 'No description'),
-                  subtitle: Text('Amount: ${income['amount']}'),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addIncome,
-        child: Icon(Icons.add),
-      ),
-    );
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            itemCount: _incomes.length,
+            itemBuilder: (context, index) {
+              final income = _incomes[index];
+              return ListTile(
+                title: Text(income['description'] ?? 'No description'),
+                subtitle: Text('Amount: ${income['amount']}'),
+              );
+            },
+          );
   }
 }

@@ -50,24 +50,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Expense')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _expenses.length,
-              itemBuilder: (context, index) {
-                final expense = _expenses[index];
-                return ListTile(
-                  title: Text(expense['description'] ?? 'No description'),
-                  subtitle: Text('Amount: ${expense['amount']}'),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addExpense,
-        child: Icon(Icons.add),
-      ),
-    );
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            itemCount: _expenses.length,
+            itemBuilder: (context, index) {
+              final expense = _expenses[index];
+              return ListTile(
+                title: Text(expense['description'] ?? 'No description'),
+                subtitle: Text('Amount: ${expense['amount']}'),
+              );
+            },
+          );
   }
 }

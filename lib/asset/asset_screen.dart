@@ -51,24 +51,17 @@ class _AssetScreenState extends State<AssetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Asset')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _assets.length,
-              itemBuilder: (context, index) {
-                final asset = _assets[index];
-                return ListTile(
-                  title: Text(asset['name'] ?? 'No name'),
-                  subtitle: Text('Value: ${asset['value']}'),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addAsset,
-        child: Icon(Icons.add),
-      ),
-    );
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            itemCount: _assets.length,
+            itemBuilder: (context, index) {
+              final asset = _assets[index];
+              return ListTile(
+                title: Text(asset['name'] ?? 'No name'),
+                subtitle: Text('Value: ${asset['value']}'),
+              );
+            },
+          );
   }
 }

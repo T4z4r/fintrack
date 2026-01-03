@@ -115,7 +115,8 @@ class DatabaseHelper {
 
   Future<int> updateExpense(int id, Map<String, dynamic> expense) async {
     Database db = await database;
-    return await db.update('expenses', expense, where: 'id = ?', whereArgs: [id]);
+    return await db
+        .update('expenses', expense, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteExpense(int id) async {
@@ -130,7 +131,8 @@ class DatabaseHelper {
 
   Future<void> markExpenseSynced(int id) async {
     Database db = await database;
-    await db.update('expenses', {'synced': 1}, where: 'id = ?', whereArgs: [id]);
+    await db.update('expenses', {'synced': 1},
+        where: 'id = ?', whereArgs: [id]);
   }
 
   // Asset methods
@@ -193,5 +195,15 @@ class DatabaseHelper {
   Future<void> markDebtSynced(int id) async {
     Database db = await database;
     await db.update('debts', {'synced': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> recreateDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    String path = join(await getDatabasesPath(), 'fintrack.db');
+    await deleteDatabase(path);
+    // The next access to database will reinitialize it
   }
 }
