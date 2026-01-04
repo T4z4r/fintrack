@@ -509,19 +509,6 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                 ),
               ],
             ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(
-              onPressed: _addDebt,
-              backgroundColor: Color(0xFF72140C),
-              child: Icon(Icons.add, color: Colors.white),
-              tooltip: 'Add Debt',
-            )
-          : FloatingActionButton(
-              onPressed: _addDebtPayment,
-              backgroundColor: Color(0xFF72140C),
-              child: Icon(Icons.payment, color: Colors.white),
-              tooltip: 'Add Payment',
-            ),
     );
   }
 
