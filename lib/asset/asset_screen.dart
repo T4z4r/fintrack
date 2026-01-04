@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/custom_loader.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class AssetScreen extends StatefulWidget {
   @override
@@ -17,6 +18,14 @@ class _AssetScreenState extends State<AssetScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Form controllers for bottom sheet
+  final _assetFormKey = GlobalKey<FormState>();
+  final _assetNameController = TextEditingController();
+  final _assetValueController = TextEditingController();
+  final _assetAcquisitionDateController = TextEditingController();
+  final _assetDescriptionController = TextEditingController();
+  String _assetType = 'real_estate';
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +37,10 @@ class _AssetScreenState extends State<AssetScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _assetNameController.dispose();
+    _assetValueController.dispose();
+    _assetAcquisitionDateController.dispose();
+    _assetDescriptionController.dispose();
     super.dispose();
   }
 
@@ -59,10 +72,41 @@ class _AssetScreenState extends State<AssetScreen> {
   }
 
   Future<void> _addAsset() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _assetNameController.clear();
+    _assetValueController.clear();
+    _assetAcquisitionDateController.clear();
+    _assetDescriptionController.clear();
+    _assetType = 'real_estate';
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AssetFormDialog(),
+      title: 'Add Asset',
+      formKey: _assetFormKey,
+      formFields: [
+        _buildAssetNameField(),
+        SizedBox(height: 16),
+        _buildAssetTypeField(),
+        SizedBox(height: 16),
+        _buildAssetValueField(),
+        SizedBox(height: 16),
+        _buildAssetAcquisitionDateField(),
+        SizedBox(height: 16),
+        _buildAssetDescriptionField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'name': _assetNameController.text,
+          'type': _assetType,
+          'value': double.parse(_assetValueController.text),
+          'acquisition_date': _assetAcquisitionDateController.text,
+          'description': _assetDescriptionController.text,
+        });
+      },
+      submitText: 'Add Asset',
     );
+
     if (result != null) {
       try {
         final response = await _api.createAsset(result);
@@ -149,6 +193,54 @@ class _AssetScreenState extends State<AssetScreen> {
       default:
         return Colors.orange;
     }
+  }
+
+  Widget _buildAssetNameField() {
+    return TextFormField(
+      controller: _assetNameController,
+      decoration: InputDecoration(labelText: 'Name'),
+      validator: (value) => value?.isEmpty ?? true ? 'Please enter name' : null,
+    );
+  }
+
+  Widget _buildAssetTypeField() {
+    return DropdownButtonFormField<String>(
+      value: _assetType,
+      decoration: InputDecoration(labelText: 'Type'),
+      items: ['real_estate', 'vehicle', 'jewelry', 'other']
+          .map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type.replaceAll('_', ' ')),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _assetType = value!),
+    );
+  }
+
+  Widget _buildAssetValueField() {
+    return TextFormField(
+      controller: _assetValueController,
+      decoration: InputDecoration(labelText: 'Value'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter value' : null,
+    );
+  }
+
+  Widget _buildAssetAcquisitionDateField() {
+    return TextFormField(
+      controller: _assetAcquisitionDateController,
+      decoration: InputDecoration(labelText: 'Acquisition Date (YYYY-MM-DD)'),
+      validator: (value) => value?.isEmpty ?? true ? 'Please enter date' : null,
+    );
+  }
+
+  Widget _buildAssetDescriptionField() {
+    return TextFormField(
+      controller: _assetDescriptionController,
+      decoration: InputDecoration(labelText: 'Description'),
+      maxLines: 3,
+    );
   }
 
   @override
@@ -314,93 +406,6 @@ class _AssetScreenState extends State<AssetScreen> {
         child: Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Asset',
       ),
-    );
-  }
-}
-
-class AssetFormDialog extends StatefulWidget {
-  @override
-  _AssetFormDialogState createState() => _AssetFormDialogState();
-}
-
-class _AssetFormDialogState extends State<AssetFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _valueController = TextEditingController();
-  final _acquisitionDateController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _type = 'real_estate';
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Asset'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter name' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _type,
-                decoration: InputDecoration(labelText: 'Type'),
-                items: ['real_estate', 'vehicle', 'jewelry', 'other']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type.replaceAll('_', ' ')),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _type = value!),
-              ),
-              TextFormField(
-                controller: _valueController,
-                decoration: InputDecoration(labelText: 'Value'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter value' : null,
-              ),
-              TextFormField(
-                controller: _acquisitionDateController,
-                decoration:
-                    InputDecoration(labelText: 'Acquisition Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter date' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'name': _nameController.text,
-                'type': _type,
-                'value': double.parse(_valueController.text),
-                'acquisition_date': _acquisitionDateController.text,
-                'description': _descriptionController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
     );
   }
 }

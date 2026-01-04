@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/custom_loader.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class BudgetScreen extends StatefulWidget {
   @override
@@ -18,6 +19,25 @@ class _BudgetScreenState extends State<BudgetScreen>
   bool _isLoading = true;
   late TabController _tabController;
 
+  // Form controllers for bottom sheet
+  final _budgetFormKey = GlobalKey<FormState>();
+  final _budgetNameController = TextEditingController();
+  final _budgetDescriptionController = TextEditingController();
+  String _budgetTimePeriod = 'monthly';
+  String _budgetCategoryType = 'expense';
+
+  // Budget item form controllers
+  final _budgetItemFormKey = GlobalKey<FormState>();
+  final _budgetItemNameController = TextEditingController();
+  final _budgetItemPlannedAmountController = TextEditingController();
+  final _budgetItemCategoryController = TextEditingController();
+  final _budgetItemDescriptionController = TextEditingController();
+  String _budgetItemCategoryType = 'expense';
+
+  // Update spent amount form
+  final _updateSpentFormKey = GlobalKey<FormState>();
+  final _spentAmountController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +50,13 @@ class _BudgetScreenState extends State<BudgetScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _budgetNameController.dispose();
+    _budgetDescriptionController.dispose();
+    _budgetItemNameController.dispose();
+    _budgetItemPlannedAmountController.dispose();
+    _budgetItemCategoryController.dispose();
+    _budgetItemDescriptionController.dispose();
+    _spentAmountController.dispose();
     super.dispose();
   }
 
@@ -69,10 +96,37 @@ class _BudgetScreenState extends State<BudgetScreen>
   }
 
   Future<void> _addBudget() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _budgetNameController.clear();
+    _budgetDescriptionController.clear();
+    _budgetTimePeriod = 'monthly';
+    _budgetCategoryType = 'expense';
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => BudgetFormDialog(),
+      title: 'Add Budget',
+      formKey: _budgetFormKey,
+      formFields: [
+        _buildBudgetNameField(),
+        SizedBox(height: 16),
+        _buildBudgetDescriptionField(),
+        SizedBox(height: 16),
+        _buildBudgetTimePeriodField(),
+        SizedBox(height: 16),
+        _buildBudgetCategoryTypeField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'name': _budgetNameController.text,
+          'description': _budgetDescriptionController.text,
+          'time_period': _budgetTimePeriod,
+          'category_type': _budgetCategoryType,
+        });
+      },
+      submitText: 'Add Budget',
     );
+
     if (result != null) {
       try {
         final response = await _api.createBudget(result);
@@ -95,10 +149,43 @@ class _BudgetScreenState extends State<BudgetScreen>
   }
 
   Future<void> _addBudgetItem(int budgetId) async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _budgetItemNameController.clear();
+    _budgetItemPlannedAmountController.clear();
+    _budgetItemCategoryController.clear();
+    _budgetItemDescriptionController.clear();
+    _budgetItemCategoryType = 'expense';
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => BudgetItemFormDialog(budgetId: budgetId),
+      title: 'Add Budget Item',
+      formKey: _budgetItemFormKey,
+      formFields: [
+        _buildBudgetItemNameField(),
+        SizedBox(height: 16),
+        _buildBudgetItemPlannedAmountField(),
+        SizedBox(height: 16),
+        _buildBudgetItemCategoryField(),
+        SizedBox(height: 16),
+        _buildBudgetItemCategoryTypeField(),
+        SizedBox(height: 16),
+        _buildBudgetItemDescriptionField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'budget_id': budgetId,
+          'name': _budgetItemNameController.text,
+          'planned_amount':
+              double.parse(_budgetItemPlannedAmountController.text),
+          'category_type': _budgetItemCategoryType,
+          'category': _budgetItemCategoryController.text,
+          'description': _budgetItemDescriptionController.text,
+        });
+      },
+      submitText: 'Add Budget Item',
     );
+
     if (result != null) {
       try {
         final response = await _api.createBudgetItem(result);
@@ -121,10 +208,25 @@ class _BudgetScreenState extends State<BudgetScreen>
   }
 
   Future<void> _updateBudgetItemSpentAmount(int itemId) async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _spentAmountController.clear();
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => UpdateSpentAmountDialog(),
+      title: 'Update Spent Amount',
+      formKey: _updateSpentFormKey,
+      formFields: [
+        _buildSpentAmountField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'spent_amount': double.parse(_spentAmountController.text),
+        });
+      },
+      submitText: 'Update',
     );
+
     if (result != null) {
       try {
         final response = await _api.updateBudgetItemSpentAmount(itemId, result);
@@ -223,6 +325,111 @@ class _BudgetScreenState extends State<BudgetScreen>
         );
       }
     }
+  }
+
+  Widget _buildBudgetNameField() {
+    return TextFormField(
+      controller: _budgetNameController,
+      decoration: InputDecoration(labelText: 'Name'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter a name' : null,
+    );
+  }
+
+  Widget _buildBudgetDescriptionField() {
+    return TextFormField(
+      controller: _budgetDescriptionController,
+      decoration: InputDecoration(labelText: 'Description'),
+      maxLines: 3,
+    );
+  }
+
+  Widget _buildBudgetTimePeriodField() {
+    return DropdownButtonFormField<String>(
+      value: _budgetTimePeriod,
+      decoration: InputDecoration(labelText: 'Time Period'),
+      items: ['monthly', 'yearly', 'weekly']
+          .map((period) => DropdownMenuItem(
+                value: period,
+                child: Text(period),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _budgetTimePeriod = value!),
+    );
+  }
+
+  Widget _buildBudgetCategoryTypeField() {
+    return DropdownButtonFormField<String>(
+      value: _budgetCategoryType,
+      decoration: InputDecoration(labelText: 'Category Type'),
+      items: ['expense', 'income']
+          .map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _budgetCategoryType = value!),
+    );
+  }
+
+  Widget _buildBudgetItemNameField() {
+    return TextFormField(
+      controller: _budgetItemNameController,
+      decoration: InputDecoration(labelText: 'Name'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter a name' : null,
+    );
+  }
+
+  Widget _buildBudgetItemPlannedAmountField() {
+    return TextFormField(
+      controller: _budgetItemPlannedAmountController,
+      decoration: InputDecoration(labelText: 'Planned Amount'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter planned amount' : null,
+    );
+  }
+
+  Widget _buildBudgetItemCategoryField() {
+    return TextFormField(
+      controller: _budgetItemCategoryController,
+      decoration: InputDecoration(labelText: 'Category'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter category' : null,
+    );
+  }
+
+  Widget _buildBudgetItemCategoryTypeField() {
+    return DropdownButtonFormField<String>(
+      value: _budgetItemCategoryType,
+      decoration: InputDecoration(labelText: 'Category Type'),
+      items: ['expense', 'income']
+          .map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _budgetItemCategoryType = value!),
+    );
+  }
+
+  Widget _buildBudgetItemDescriptionField() {
+    return TextFormField(
+      controller: _budgetItemDescriptionController,
+      decoration: InputDecoration(labelText: 'Description'),
+      maxLines: 3,
+    );
+  }
+
+  Widget _buildSpentAmountField() {
+    return TextFormField(
+      controller: _spentAmountController,
+      decoration: InputDecoration(labelText: 'Spent Amount'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter spent amount' : null,
+    );
   }
 
   @override
@@ -684,221 +891,3 @@ class _BudgetScreenState extends State<BudgetScreen>
   }
 }
 
-class BudgetFormDialog extends StatefulWidget {
-  @override
-  _BudgetFormDialogState createState() => _BudgetFormDialogState();
-}
-
-class _BudgetFormDialogState extends State<BudgetFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _timePeriod = 'monthly';
-  String _categoryType = 'expense';
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Budget'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter a name' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-              DropdownButtonFormField<String>(
-                value: _timePeriod,
-                decoration: InputDecoration(labelText: 'Time Period'),
-                items: ['monthly', 'yearly', 'weekly']
-                    .map((period) => DropdownMenuItem(
-                          value: period,
-                          child: Text(period),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _timePeriod = value!),
-              ),
-              DropdownButtonFormField<String>(
-                value: _categoryType,
-                decoration: InputDecoration(labelText: 'Category Type'),
-                items: ['expense', 'income']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _categoryType = value!),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'name': _nameController.text,
-                'description': _descriptionController.text,
-                'time_period': _timePeriod,
-                'category_type': _categoryType,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-class BudgetItemFormDialog extends StatefulWidget {
-  final int budgetId;
-
-  const BudgetItemFormDialog({Key? key, required this.budgetId})
-      : super(key: key);
-
-  @override
-  _BudgetItemFormDialogState createState() => _BudgetItemFormDialogState();
-}
-
-class _BudgetItemFormDialogState extends State<BudgetItemFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _plannedAmountController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _categoryType = 'expense';
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Budget Item'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter a name' : null,
-              ),
-              TextFormField(
-                controller: _plannedAmountController,
-                decoration: InputDecoration(labelText: 'Planned Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Please enter planned amount'
-                    : null,
-              ),
-              TextFormField(
-                controller: _categoryController,
-                decoration: InputDecoration(labelText: 'Category'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter category' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _categoryType,
-                decoration: InputDecoration(labelText: 'Category Type'),
-                items: ['expense', 'income']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _categoryType = value!),
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'budget_id': widget.budgetId,
-                'name': _nameController.text,
-                'planned_amount': double.parse(_plannedAmountController.text),
-                'category_type': _categoryType,
-                'category': _categoryController.text,
-                'description': _descriptionController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-class UpdateSpentAmountDialog extends StatefulWidget {
-  @override
-  _UpdateSpentAmountDialogState createState() =>
-      _UpdateSpentAmountDialogState();
-}
-
-class _UpdateSpentAmountDialogState extends State<UpdateSpentAmountDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _spentAmountController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Update Spent Amount'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _spentAmountController,
-          decoration: InputDecoration(labelText: 'Spent Amount'),
-          keyboardType: TextInputType.number,
-          validator: (value) =>
-              value?.isEmpty ?? true ? 'Please enter spent amount' : null,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'spent_amount': double.parse(_spentAmountController.text),
-              });
-            }
-          },
-          child: Text('Update'),
-        ),
-      ],
-    );
-  }
-}

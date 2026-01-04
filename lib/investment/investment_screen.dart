@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/custom_loader.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class InvestmentScreen extends StatefulWidget {
   @override
@@ -17,6 +18,15 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Form controllers for bottom sheet
+  final _investmentFormKey = GlobalKey<FormState>();
+  final _investmentNameController = TextEditingController();
+  final _investmentAmountInvestedController = TextEditingController();
+  final _investmentCurrentValueController = TextEditingController();
+  final _investmentDateInvestedController = TextEditingController();
+  final _investmentDescriptionController = TextEditingController();
+  String _investmentType = 'stocks';
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +38,11 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _investmentNameController.dispose();
+    _investmentAmountInvestedController.dispose();
+    _investmentCurrentValueController.dispose();
+    _investmentDateInvestedController.dispose();
+    _investmentDescriptionController.dispose();
     super.dispose();
   }
 
@@ -59,10 +74,46 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   Future<void> _addInvestment() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _investmentNameController.clear();
+    _investmentAmountInvestedController.clear();
+    _investmentCurrentValueController.clear();
+    _investmentDateInvestedController.clear();
+    _investmentDescriptionController.clear();
+    _investmentType = 'stocks';
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => InvestmentFormDialog(),
+      title: 'Add Investment',
+      formKey: _investmentFormKey,
+      formFields: [
+        _buildInvestmentNameField(),
+        SizedBox(height: 16),
+        _buildInvestmentTypeField(),
+        SizedBox(height: 16),
+        _buildInvestmentAmountInvestedField(),
+        SizedBox(height: 16),
+        _buildInvestmentCurrentValueField(),
+        SizedBox(height: 16),
+        _buildInvestmentDateInvestedField(),
+        SizedBox(height: 16),
+        _buildInvestmentDescriptionField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'name': _investmentNameController.text,
+          'type': _investmentType,
+          'amount_invested':
+              double.parse(_investmentAmountInvestedController.text),
+          'current_value': double.parse(_investmentCurrentValueController.text),
+          'date_invested': _investmentDateInvestedController.text,
+          'description': _investmentDescriptionController.text,
+        });
+      },
+      submitText: 'Add Investment',
     );
+
     if (result != null) {
       try {
         final response = await _api.createInvestment(result);
@@ -121,6 +172,65 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         );
       }
     }
+  }
+
+  Widget _buildInvestmentNameField() {
+    return TextFormField(
+      controller: _investmentNameController,
+      decoration: InputDecoration(labelText: 'Name'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter a name' : null,
+    );
+  }
+
+  Widget _buildInvestmentTypeField() {
+    return DropdownButtonFormField<String>(
+      value: _investmentType,
+      decoration: InputDecoration(labelText: 'Type'),
+      items: ['stocks', 'bonds', 'real_estate', 'crypto', 'other']
+          .map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _investmentType = value!),
+    );
+  }
+
+  Widget _buildInvestmentAmountInvestedField() {
+    return TextFormField(
+      controller: _investmentAmountInvestedController,
+      decoration: InputDecoration(labelText: 'Amount Invested'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter amount' : null,
+    );
+  }
+
+  Widget _buildInvestmentCurrentValueField() {
+    return TextFormField(
+      controller: _investmentCurrentValueController,
+      decoration: InputDecoration(labelText: 'Current Value'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter current value' : null,
+    );
+  }
+
+  Widget _buildInvestmentDateInvestedField() {
+    return TextFormField(
+      controller: _investmentDateInvestedController,
+      decoration: InputDecoration(labelText: 'Date Invested (YYYY-MM-DD)'),
+      validator: (value) => value?.isEmpty ?? true ? 'Please enter date' : null,
+    );
+  }
+
+  Widget _buildInvestmentDescriptionField() {
+    return TextFormField(
+      controller: _investmentDescriptionController,
+      decoration: InputDecoration(labelText: 'Description'),
+      maxLines: 3,
+    );
   }
 
   @override
@@ -301,99 +411,3 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 }
 
-class InvestmentFormDialog extends StatefulWidget {
-  @override
-  _InvestmentFormDialogState createState() => _InvestmentFormDialogState();
-}
-
-class _InvestmentFormDialogState extends State<InvestmentFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _amountInvestedController = TextEditingController();
-  final _currentValueController = TextEditingController();
-  final _dateInvestedController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _type = 'stocks';
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Investment'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter a name' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _type,
-                decoration: InputDecoration(labelText: 'Type'),
-                items: ['stocks', 'bonds', 'real_estate', 'crypto', 'other']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _type = value!),
-              ),
-              TextFormField(
-                controller: _amountInvestedController,
-                decoration: InputDecoration(labelText: 'Amount Invested'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter amount' : null,
-              ),
-              TextFormField(
-                controller: _currentValueController,
-                decoration: InputDecoration(labelText: 'Current Value'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Please enter current value'
-                    : null,
-              ),
-              TextFormField(
-                controller: _dateInvestedController,
-                decoration:
-                    InputDecoration(labelText: 'Date Invested (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter date' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'name': _nameController.text,
-                'type': _type,
-                'amount_invested': double.parse(_amountInvestedController.text),
-                'current_value': double.parse(_currentValueController.text),
-                'date_invested': _dateInvestedController.text,
-                'description': _descriptionController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
-    );
-  }
-}

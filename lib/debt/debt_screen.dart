@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/custom_loader.dart';
+import '../widgets/bottom_sheet_form.dart';
 
 class DebtScreen extends StatefulWidget {
   @override
@@ -18,6 +19,21 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   bool _isLoading = true;
   late TabController _tabController;
 
+  // Debt form controllers
+  final _debtFormKey = GlobalKey<FormState>();
+  final _debtNameController = TextEditingController();
+  final _debtAmountController = TextEditingController();
+  final _debtDueDateController = TextEditingController();
+  String _debtStatus = 'partial';
+
+  // Debt payment form controllers
+  final _debtPaymentFormKey = GlobalKey<FormState>();
+  final _debtPaymentAmountController = TextEditingController();
+  final _debtPaymentDateController = TextEditingController();
+  final _debtPaymentMethodController = TextEditingController();
+  final _debtPaymentNotesController = TextEditingController();
+  int? _debtPaymentDebtId;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +46,13 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tabController.dispose();
+    _debtNameController.dispose();
+    _debtAmountController.dispose();
+    _debtDueDateController.dispose();
+    _debtPaymentAmountController.dispose();
+    _debtPaymentDateController.dispose();
+    _debtPaymentMethodController.dispose();
+    _debtPaymentNotesController.dispose();
     super.dispose();
   }
 
@@ -82,10 +105,37 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _addDebt() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _debtNameController.clear();
+    _debtAmountController.clear();
+    _debtDueDateController.clear();
+    _debtStatus = 'partial';
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => DebtFormDialog(),
+      title: 'Add Debt',
+      formKey: _debtFormKey,
+      formFields: [
+        _buildDebtNameField(),
+        SizedBox(height: 16),
+        _buildDebtAmountField(),
+        SizedBox(height: 16),
+        _buildDebtDueDateField(),
+        SizedBox(height: 16),
+        _buildDebtStatusField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'name': _debtNameController.text,
+          'amount': double.parse(_debtAmountController.text),
+          'due_date': _debtDueDateController.text,
+          'status': _debtStatus,
+        });
+      },
+      submitText: 'Add Debt',
     );
+
     if (result != null) {
       try {
         final response = await _api.createDebt(result);
@@ -115,10 +165,41 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
       return;
     }
 
-    final result = await showDialog<Map<String, dynamic>>(
+    // Clear form
+    _debtPaymentAmountController.clear();
+    _debtPaymentDateController.clear();
+    _debtPaymentMethodController.clear();
+    _debtPaymentNotesController.clear();
+    _debtPaymentDebtId = null;
+
+    final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
-      builder: (context) => DebtPaymentFormDialog(debts: _debts),
+      title: 'Add Debt Payment',
+      formKey: _debtPaymentFormKey,
+      formFields: [
+        _buildDebtPaymentDebtField(),
+        SizedBox(height: 16),
+        _buildDebtPaymentAmountField(),
+        SizedBox(height: 16),
+        _buildDebtPaymentDateField(),
+        SizedBox(height: 16),
+        _buildDebtPaymentMethodField(),
+        SizedBox(height: 16),
+        _buildDebtPaymentNotesField(),
+      ],
+      onCancel: () => Navigator.of(context).pop(),
+      onSubmit: () {
+        Navigator.of(context).pop({
+          'debt_id': _debtPaymentDebtId,
+          'amount': double.parse(_debtPaymentAmountController.text),
+          'payment_date': _debtPaymentDateController.text,
+          'payment_method': _debtPaymentMethodController.text,
+          'notes': _debtPaymentNotesController.text,
+        });
+      },
+      submitText: 'Add Payment',
     );
+
     if (result != null) {
       try {
         final response = await _api.createDebtPayment(result);
@@ -217,6 +298,105 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
         );
       }
     }
+  }
+
+  Widget _buildDebtNameField() {
+    return TextFormField(
+      controller: _debtNameController,
+      decoration: InputDecoration(labelText: 'Name'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter name' : null,
+    );
+  }
+
+  Widget _buildDebtAmountField() {
+    return TextFormField(
+      controller: _debtAmountController,
+      decoration: InputDecoration(labelText: 'Amount'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter amount' : null,
+    );
+  }
+
+  Widget _buildDebtDueDateField() {
+    return TextFormField(
+      controller: _debtDueDateController,
+      decoration: InputDecoration(labelText: 'Due Date (YYYY-MM-DD)'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter due date' : null,
+    );
+  }
+
+  Widget _buildDebtStatusField() {
+    return DropdownButtonFormField<String>(
+      value: _debtStatus,
+      decoration: InputDecoration(labelText: 'Status'),
+      items: ['partial', 'paid', 'overdue']
+          .map((status) => DropdownMenuItem(
+                value: status,
+                child: Text(status),
+              ))
+          .toList(),
+      onChanged: (value) => setState(() => _debtStatus = value!),
+    );
+  }
+
+  Widget _buildDebtPaymentDebtField() {
+    return DropdownButtonFormField<int>(
+      value: _debtPaymentDebtId,
+      decoration: InputDecoration(labelText: 'Select Debt'),
+      items: _debts.map((debt) {
+        return DropdownMenuItem<int>(
+          value: debt['id'],
+          child: Text(debt['name'] ?? 'Unnamed Debt'),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _debtPaymentDebtId = value;
+        });
+      },
+      validator: (value) =>
+          value == null ? 'Please select a debt' : null,
+    );
+  }
+
+  Widget _buildDebtPaymentAmountField() {
+    return TextFormField(
+      controller: _debtPaymentAmountController,
+      decoration: InputDecoration(labelText: 'Amount'),
+      keyboardType: TextInputType.number,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter amount' : null,
+    );
+  }
+
+  Widget _buildDebtPaymentDateField() {
+    return TextFormField(
+      controller: _debtPaymentDateController,
+      decoration: InputDecoration(labelText: 'Payment Date (YYYY-MM-DD)'),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter payment date' : null,
+    );
+  }
+
+  Widget _buildDebtPaymentMethodField() {
+    return TextFormField(
+      controller: _debtPaymentMethodController,
+      decoration: InputDecoration(labelText: 'Payment Method'),
+      validator: (value) => value?.isEmpty ?? true
+          ? 'Please enter payment method'
+          : null,
+    );
+  }
+
+  Widget _buildDebtPaymentNotesField() {
+    return TextFormField(
+      controller: _debtPaymentNotesController,
+      decoration: InputDecoration(labelText: 'Notes'),
+      maxLines: 3,
+    );
   }
 
   @override
@@ -642,180 +822,3 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   }
 }
 
-class DebtFormDialog extends StatefulWidget {
-  @override
-  _DebtFormDialogState createState() => _DebtFormDialogState();
-}
-
-class _DebtFormDialogState extends State<DebtFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _dueDateController = TextEditingController();
-  String _status = 'partial';
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Debt'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter name' : null,
-              ),
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter amount' : null,
-              ),
-              TextFormField(
-                controller: _dueDateController,
-                decoration: InputDecoration(labelText: 'Due Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter due date' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _status,
-                decoration: InputDecoration(labelText: 'Status'),
-                items: ['partial', 'paid', 'overdue']
-                    .map((status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _status = value!),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'name': _nameController.text,
-                'amount': double.parse(_amountController.text),
-                'due_date': _dueDateController.text,
-                'status': _status,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-class DebtPaymentFormDialog extends StatefulWidget {
-  final List<Map<String, dynamic>> debts;
-
-  const DebtPaymentFormDialog({Key? key, required this.debts})
-      : super(key: key);
-
-  @override
-  _DebtPaymentFormDialogState createState() => _DebtPaymentFormDialogState();
-}
-
-class _DebtPaymentFormDialogState extends State<DebtPaymentFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _paymentDateController = TextEditingController();
-  final _paymentMethodController = TextEditingController();
-  final _notesController = TextEditingController();
-  int? _debtId;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Debt Payment'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<int>(
-                value: _debtId,
-                decoration: InputDecoration(labelText: 'Select Debt'),
-                items: widget.debts.map((debt) {
-                  return DropdownMenuItem<int>(
-                    value: debt['id'],
-                    child: Text(debt['name'] ?? 'Unnamed Debt'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _debtId = value;
-                  });
-                },
-                validator: (value) =>
-                    value == null ? 'Please select a debt' : null,
-              ),
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter amount' : null,
-              ),
-              TextFormField(
-                controller: _paymentDateController,
-                decoration:
-                    InputDecoration(labelText: 'Payment Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter payment date' : null,
-              ),
-              TextFormField(
-                controller: _paymentMethodController,
-                decoration: InputDecoration(labelText: 'Payment Method'),
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Please enter payment method'
-                    : null,
-              ),
-              TextFormField(
-                controller: _notesController,
-                decoration: InputDecoration(labelText: 'Notes'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop({
-                'debt_id': _debtId,
-                'amount': double.parse(_amountController.text),
-                'payment_date': _paymentDateController.text,
-                'payment_method': _paymentMethodController.text,
-                'notes': _notesController.text,
-              });
-            }
-          },
-          child: Text('Add'),
-        ),
-      ],
-    );
-  }
-}
