@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF72140C)),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
         appBarTheme: AppBarTheme(
           backgroundColor: Color(0xFF72140C),
           foregroundColor: Colors.white,
