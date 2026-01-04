@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/bottom_sheet_form.dart';
@@ -23,7 +22,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _dateController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _notesController = TextEditingController();
   final _searchController = TextEditingController();
   String _searchQuery = '';
   int? _incomeSourceId;
@@ -40,7 +39,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   void dispose() {
     _amountController.dispose();
     _dateController.dispose();
-    _descriptionController.dispose();
+    _notesController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -103,7 +102,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     // Clear form
     _amountController.clear();
     _dateController.clear();
-    _descriptionController.clear();
+    _notesController.clear();
 
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
@@ -129,7 +128,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
         SizedBox(height: 16),
         _buildDateField(),
         SizedBox(height: 16),
-        _buildDescriptionField(),
+        _buildNotesField(),
       ],
       onCancel: () => Navigator.of(context).pop(),
       onSubmit: () {
@@ -137,11 +136,31 @@ class _IncomeScreenState extends State<IncomeScreen> {
           'income_source_id': _incomeSourceId ?? _incomeSources.first['id'],
           'amount': double.parse(_amountController.text),
           'date': _dateController.text,
-          'description': _descriptionController.text,
+          'notes': _notesController.text,
         });
       },
       submitText: 'Add Income',
     );
+
+    if (result != null) {
+      try {
+        final response = await _api.createIncome(result);
+        if (response.statusCode == 201) {
+          _fetchIncomes();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Income added successfully')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add income')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _deleteIncome(int id) async {
@@ -257,12 +276,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
     );
   }
 
-  Widget _buildDescriptionField() {
+  Widget _buildNotesField() {
     return TextFormField(
-      controller: _descriptionController,
+      controller: _notesController,
       decoration: InputDecoration(
-        labelText: 'Description',
-        prefixIcon: Icon(Icons.description),
+        labelText: 'Notes',
+        prefixIcon: Icon(Icons.notes),
         alignLabelWithHint: true,
       ),
       maxLines: 3,
@@ -273,13 +292,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
   Widget build(BuildContext context) {
     final filteredIncomes = _incomes.where((income) {
       final query = _searchQuery.toLowerCase();
-      final description = (income['description'] ?? '').toLowerCase();
-      final incomeSource = _incomeSources.firstWhere(
-        (source) => source['id'] == income['income_source_id'],
-        orElse: () => {'name': ''},
-      );
-      final sourceName = (incomeSource['name'] ?? '').toLowerCase();
-      return description.contains(query) || sourceName.contains(query);
+      final notes = (income['notes'] ?? '').toLowerCase();
+      final sourceName = (income['source']['name'] ?? '').toLowerCase();
+      return notes.contains(query) || sourceName.contains(query);
     }).toList();
 
     return Scaffold(
@@ -361,13 +376,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                             final amount = double.tryParse(
                                     income['amount']?.toString() ?? '0') ??
                                 0.0;
-                            final incomeSource = _incomeSources.firstWhere(
-                              (source) =>
-                                  source['id'] == income['income_source_id'],
-                              orElse: () => {'name': 'Unknown'},
-                            );
-                            final sourceName =
-                                incomeSource['name'] ?? 'Unknown';
+                            final sourceName = income['source']['name'] ?? 'Unknown';
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
@@ -398,15 +407,15 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                       size: 20,
                                     ),
                                   ),
-                                  title: Text(income['description'] ??
-                                      'No description'),
+                                  title: Text(income['notes'] ??
+                                      'No notes'),
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                           '${income['date'] ?? 'N/A'} • $sourceName'),
-                                      Text('\$${amount.toStringAsFixed(2)}'),
+                                      Text('${income['category'] ?? ''} • \$${amount.toStringAsFixed(2)}'),
                                     ],
                                   ),
                                   trailing: PopupMenuButton<String>(
@@ -430,7 +439,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                 ),
                               ),
                             );
-                       
+
                           },
                         ),
                       ),
