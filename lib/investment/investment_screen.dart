@@ -125,7 +125,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredInvestments = _investments.where((investment) {
-      final query = _searchController.text.toLowerCase();
+      final query = _searchQuery.toLowerCase();
       final name = (investment['name'] ?? '').toLowerCase();
       final type = (investment['type'] ?? '').toLowerCase();
       return name.contains(query) || type.contains(query);
