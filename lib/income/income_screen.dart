@@ -312,7 +312,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     itemCount: _incomes.length,
                     itemBuilder: (context, index) {
                       final income = _incomes[index];
-                      final amount = income['amount'] ?? 0;
+                      final amount = double.tryParse(
+                              income['amount']?.toString() ?? '0') ??
+                          0.0;
 
                       return Card(
                         margin: EdgeInsets.only(bottom: 12),

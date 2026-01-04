@@ -22,7 +22,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   final _amountController = TextEditingController();
   final _categoryController = TextEditingController();
   final _dateController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _notesController = TextEditingController();
   final _paymentSourceController = TextEditingController();
 
   @override
@@ -38,7 +38,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _amountController.dispose();
     _categoryController.dispose();
     _dateController.dispose();
-    _descriptionController.dispose();
+    _notesController.dispose();
     _paymentSourceController.dispose();
     super.dispose();
   }
@@ -75,7 +75,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _amountController.clear();
     _categoryController.clear();
     _dateController.clear();
-    _descriptionController.clear();
+    _notesController.clear();
     _paymentSourceController.clear();
 
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
@@ -91,7 +91,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         SizedBox(height: 16),
         _buildDateField(),
         SizedBox(height: 16),
-        _buildDescriptionField(),
+        _buildNotesField(),
       ],
       onCancel: () => Navigator.of(context).pop(),
       onSubmit: () {
@@ -99,7 +99,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           'amount': double.parse(_amountController.text),
           'category': _categoryController.text,
           'date': _dateController.text,
-          'description': _descriptionController.text,
+          'notes': _notesController.text,
+          'payment_source': _paymentSourceController.text,
         });
       },
       submitText: 'Add Expense',
@@ -171,7 +172,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       decoration: InputDecoration(
         labelText: 'Amount',
         prefixIcon: Icon(Icons.attach_money),
-        prefixText: '\$',
       ),
       keyboardType: TextInputType.number,
       validator: (value) {
@@ -233,11 +233,11 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     );
   }
 
-  Widget _buildDescriptionField() {
+  Widget _buildNotesField() {
     return TextFormField(
-      controller: _descriptionController,
+      controller: _notesController,
       decoration: InputDecoration(
-        labelText: 'Description',
+        labelText: 'Notes',
         prefixIcon: Icon(Icons.description),
         alignLabelWithHint: true,
       ),
