@@ -3,6 +3,7 @@ import 'custom_loader.dart';
 
 class BottomSheetForm extends StatefulWidget {
   final String title;
+  final Widget? header;
   final List<Widget> formFields;
   final VoidCallback onCancel;
   final VoidCallback onSubmit;
@@ -13,6 +14,7 @@ class BottomSheetForm extends StatefulWidget {
   const BottomSheetForm({
     Key? key,
     required this.title,
+    this.header,
     required this.formFields,
     required this.onCancel,
     required this.onSubmit,
@@ -24,6 +26,7 @@ class BottomSheetForm extends StatefulWidget {
   static Future<T?> show<T>({
     required BuildContext context,
     required String title,
+    Widget? header,
     required List<Widget> formFields,
     required VoidCallback onCancel,
     required VoidCallback onSubmit,
@@ -37,6 +40,7 @@ class BottomSheetForm extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => BottomSheetForm(
         title: title,
+        header: header,
         formFields: formFields,
         onCancel: onCancel,
         onSubmit: onSubmit,
@@ -107,6 +111,12 @@ class _BottomSheetFormState extends State<BottomSheetForm> {
                     ),
               ),
               SizedBox(height: 20),
+
+              // Header (if provided)
+              if (widget.header != null) ...[
+                widget.header!,
+                SizedBox(height: 24),
+              ],
 
               // Form fields
               Form(

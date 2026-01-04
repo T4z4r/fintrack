@@ -108,6 +108,19 @@ class _IncomeScreenState extends State<IncomeScreen> {
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
       title: 'Add Income',
+      header: Container(
+        width: double.infinity,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Color(0xFF72140C).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          Icons.add_box,
+          size: 40,
+          color: Color(0xFF72140C),
+        ),
+      ),
       formKey: _formKey,
       formFields: [
         _buildIncomeSourceDropdown(),
