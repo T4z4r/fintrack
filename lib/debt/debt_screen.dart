@@ -320,211 +320,212 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                 final debt = _debts[index];
                 final payments = _debtPaymentsByDebt[debt['id']] ?? [];
                 final totalPaid = payments.fold<double>(
-                    0.0, (double sum, payment) => sum + (double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0));
-                final debtAmount = double.tryParse(debt['amount']?.toString() ?? '0') ?? 0.0;
+                    0.0,
+                    (double sum, payment) =>
+                        sum +
+                        (double.tryParse(
+                                payment['amount']?.toString() ?? '0') ??
+                            0.0));
+                final debtAmount =
+                    double.tryParse(debt['amount']?.toString() ?? '0') ?? 0.0;
                 final remainingAmount = debtAmount - totalPaid;
                 final isPaidOff = remainingAmount <= 0;
                 final isOverdue = debt['status'] == 'overdue';
 
                 return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  elevation: 2,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                  color: Theme.of(context).cardColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 4,
+                        ),
+                      ),
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isPaidOff
-                                    ? Colors.green.withOpacity(0.1)
-                                    : isOverdue
-                                        ? Colors.red.withOpacity(0.1)
-                                        : Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                isPaidOff
-                                    ? Icons.check_circle
-                                    : Icons.credit_card,
-                                color: isPaidOff
-                                    ? Colors.green
-                                    : isOverdue
-                                        ? Colors.red
-                                        : Colors.orange,
-                                size: 20,
-                              ),
+                        ListTile(
+                          leading: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isPaidOff
+                                  ? Colors.green.withOpacity(0.1)
+                                  : isOverdue
+                                      ? Colors.red.withOpacity(0.1)
+                                      : Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    debt['name'] ?? 'Unnamed Debt',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Status: ${debt['status'] ?? 'N/A'} • Due: ${debt['due_date'] ?? 'N/A'}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            child: Icon(
+                              isPaidOff
+                                  ? Icons.check_circle
+                                  : Icons.credit_card,
+                              color: isPaidOff
+                                  ? Colors.green
+                                  : isOverdue
+                                      ? Colors.red
+                                      : Colors.orange,
+                              size: 20,
                             ),
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'delete') {
-                                  _deleteDebt(debt['id']);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete,
-                                          size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Delete',
-                                          style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Total Amount',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                Text(
-                                  '\$${debtAmount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Remaining',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                Text(
-                                  '\$${remainingAmount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isPaidOff ? Colors.green : Colors.red,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        if (payments.isNotEmpty) ...[
-                          SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Payments (${payments.length})',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF72140C),
-                                ),
-                              ),
-                              Text(
-                                'Total Paid: \$${totalPaid.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                          ),
+                          title: Text(debt['name'] ?? 'Unnamed Debt'),
+                          subtitle: Text(
+                            'Status: ${debt['status'] ?? 'N/A'} • Due: ${debt['due_date'] ?? 'N/A'}',
+                          ),
+                          trailing: PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert),
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _deleteDebt(debt['id']);
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: ListTile(
+                                  leading:
+                                      Icon(Icons.delete, color: Colors.red),
+                                  title: Text('Delete'),
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
-                          ...payments.take(2).map((payment) => Padding(
-                                padding: EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Total Amount',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${debtAmount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'Remaining',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${remainingAmount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: isPaidOff
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              if (payments.isNotEmpty) ...[
+                                SizedBox(height: 12),
+                                Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      '${payment['payment_date'] ?? 'N/A'} • ${payment['payment_method'] ?? 'N/A'}',
-                                      style: TextStyle(fontSize: 12),
+                                      'Payments (${payments.length})',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF72140C),
+                                      ),
                                     ),
                                     Text(
-                                      '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                      'Total Paid: \$${totalPaid.toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[600],
                                       ),
                                     ),
                                   ],
                                 ),
-                              )),
-                          if (payments.length > 2)
-                            Text(
-                              '...and ${payments.length - 2} more payments',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                        ],
-                        if (isPaidOff) ...[
-                          SizedBox(height: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'PAID OFF',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
+                                SizedBox(height: 8),
+                                ...payments.take(2).map((payment) => Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${payment['payment_date'] ?? 'N/A'} • ${payment['payment_method'] ?? 'N/A'}',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                          Text(
+                                            '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )),
+                                if (payments.length > 2)
+                                  Text(
+                                    '...and ${payments.length - 2} more payments',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                              if (isPaidOff) ...[
+                                SizedBox(height: 8),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'PAID OFF',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
@@ -574,79 +575,60 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
               itemBuilder: (context, index) {
                 final payment = _debtPayments[index];
                 return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 4, horizontal: 10),
+                  color: Theme.of(context).cardColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.payment,
-                            color: Colors.blue,
-                            size: 20,
-                          ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 4,
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                payment['payment_method'] ?? 'Unknown Method',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '${payment['payment_date'] ?? 'N/A'} • Debt ID: ${payment['debt_id'] ?? 'N/A'}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              if (payment['notes'] != null) ...[
-                                SizedBox(height: 4),
-                                Text(
-                                  payment['notes'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
+                        child: Icon(
+                          Icons.payment,
+                          color: Colors.blue,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(payment['payment_method'] ?? 'Unknown Method'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${payment['payment_date'] ?? 'N/A'} • Debt ID: ${payment['debt_id'] ?? 'N/A'}'),
+                          if (payment['notes'] != null) Text(payment['notes']),
+                          Text('\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}'),
+                        ],
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            _deleteDebtPayment(payment['id']);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: ListTile(
+                              leading: Icon(Icons.delete, color: Colors.red),
+                              title: Text('Delete'),
                             ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () =>
-                                  _deleteDebtPayment(payment['id']),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

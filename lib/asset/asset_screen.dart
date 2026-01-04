@@ -222,7 +222,8 @@ class _AssetScreenState extends State<AssetScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onChanged: (value) => setState(() => _searchQuery = value),
+                        onChanged: (value) =>
+                            setState(() => _searchQuery = value),
                       ),
                     ),
                     Expanded(
@@ -233,27 +234,31 @@ class _AssetScreenState extends State<AssetScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           itemCount: filteredAssets.length,
                           itemBuilder: (context, index) {
-                       final asset = filteredAssets[index];
-                      final value =
-                          double.tryParse(asset['value']?.toString() ?? '0') ??
-                              0.0;
-                      final icon = _getAssetIcon(asset['type']);
-                      final color = _getAssetColor(asset['type']);
+                            final asset = filteredAssets[index];
+                            final value = double.tryParse(
+                                    asset['value']?.toString() ?? '0') ??
+                                0.0;
+                            final icon = _getAssetIcon(asset['type']);
+                            final color = _getAssetColor(asset['type']);
 
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 10),
+                              color: Theme.of(context).cardColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: Theme.of(context).primaryColor,
+                                      width: 4,
+                                    ),
+                                  ),
+                                ),
+                                child: ListTile(
+                                  leading: Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: color.withOpacity(0.1),
@@ -265,140 +270,44 @@ class _AssetScreenState extends State<AssetScreen> {
                                       size: 20,
                                     ),
                                   ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          asset['name'] ?? 'Unnamed Asset',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          '${asset['type']?.replaceAll('_', ' ') ?? 'N/A'} • Acquired: ${asset['acquisition_date'] ?? 'N/A'}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteAsset(asset['id']),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
+                                  title: Text(asset['name'] ?? 'Unnamed Asset'),
+                                  subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Current Value',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                      Text(
-                                        '\$${value.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: color,
-                                        ),
-                                      ),
+                                          '${asset['type']?.replaceAll('_', ' ') ?? 'N/A'} • Acquired: ${asset['acquisition_date'] ?? 'N/A'}'),
+                                      Text('\$${value.toStringAsFixed(2)}'),
                                     ],
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: color.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          icon,
-                                          size: 16,
-                                          color: color,
-                                        ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          asset['type']?.replaceAll('_', ' ') ??
-                                              'Unknown',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: color,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (asset['description'] != null) ...[
-                                SizedBox(height: 12),
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey[200]!,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Description',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        asset['description'],
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[700],
+                                  trailing: PopupMenuButton<String>(
+                                    icon: const Icon(Icons.more_vert),
+                                    onSelected: (value) {
+                                      if (value == 'delete') {
+                                        _deleteAsset(asset['id']);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: ListTile(
+                                          leading: Icon(Icons.delete,
+                                              color: Colors.red),
+                                          title: Text('Delete'),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ],
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                       ),
-                     ),
-                   ),
-                 ],
-               ),
-     floatingActionButton: FloatingActionButton(
+                      ),
+                    ),
+                  ],
+                ),
+      floatingActionButton: FloatingActionButton(
         onPressed: _addAsset,
         backgroundColor: Color(0xFF72140C),
         child: Icon(Icons.add, color: Colors.white),
