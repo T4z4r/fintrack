@@ -23,6 +23,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   final _categoryController = TextEditingController();
   final _dateController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _paymentSourceController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _categoryController.dispose();
     _dateController.dispose();
     _descriptionController.dispose();
+    _paymentSourceController.dispose();
     super.dispose();
   }
 
@@ -74,6 +76,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _categoryController.clear();
     _dateController.clear();
     _descriptionController.clear();
+    _paymentSourceController.clear();
 
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
@@ -83,6 +86,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         _buildAmountField(),
         SizedBox(height: 16),
         _buildCategoryField(),
+        SizedBox(height: 16),
+        _buildPaymentSourceField(),
         SizedBox(height: 16),
         _buildDateField(),
         SizedBox(height: 16),
@@ -206,6 +211,22 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       validator: (value) {
         if (value?.isEmpty ?? true) {
           return 'Please select a date';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPaymentSourceField() {
+    return TextFormField(
+      controller: _paymentSourceController,
+      decoration: InputDecoration(
+        labelText: 'Payment Source',
+        prefixIcon: Icon(Icons.account_balance_wallet),
+      ),
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Please enter payment source';
         }
         return null;
       },
