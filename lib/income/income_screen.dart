@@ -25,7 +25,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   final _notesController = TextEditingController();
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  int? _incomeSourceId;
+  String? _incomeSourceId;
 
   @override
   void initState() {
@@ -61,7 +61,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
             _incomeSources = List<Map<String, dynamic>>.from(data['data']);
             // Set default income source if available
             if (_incomeSources.isNotEmpty && _incomeSourceId == null) {
-              _incomeSourceId = _incomeSources.first['id'];
+              _incomeSourceId = _incomeSources.first['id'] as String;
             }
           });
         }
@@ -133,7 +133,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
       onCancel: () => Navigator.of(context).pop(),
       onSubmit: () {
         Navigator.of(context).pop({
-          'income_source_id': _incomeSourceId ?? _incomeSources.first['id'],
+          'income_source_id':
+              _incomeSourceId ?? (_incomeSources.first['id'] as String),
           'amount': double.parse(_amountController.text),
           'date': _dateController.text,
           'notes': _notesController.text,
@@ -202,9 +203,364 @@ class _IncomeScreenState extends State<IncomeScreen> {
     }
   }
 
+  Future<void> _viewIncomeDetails(Map<String, dynamic> income) async {
+    final amount = double.tryParse(income['amount']?.toString() ?? '0') ?? 0.0;
+    final sourceBalance =
+        double.tryParse(income['source']['balance']?.toString() ?? '0') ?? 0.0;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: EdgeInsets.only(top: 50),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.05),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF72140C),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF72140C).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.trending_up,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Income Details',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF72140C),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Complete information about this income',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Container(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Amount highlight
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF72140C).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Color(0xFF72140C).withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.attach_money,
+                            color: Color(0xFF72140C),
+                            size: 24,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '\$${amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF72140C),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    // Details
+                    _buildDetailSection('Basic Information', [
+                      _buildDetailRow(
+                          'Notes', income['notes'] ?? 'N/A', Icons.notes),
+                      _buildDetailRow('Category', income['category'] ?? 'N/A',
+                          Icons.category),
+                      _buildDetailRow('Date', income['date'] ?? 'N/A',
+                          Icons.calendar_today),
+                    ]),
+                    SizedBox(height: 16),
+                    _buildDetailSection('Source Information', [
+                      _buildDetailRow(
+                          'Source Name',
+                          income['source']['name'] ?? 'N/A',
+                          Icons.account_balance),
+                      _buildDetailRow('Source Type',
+                          income['source']['type'] ?? 'N/A', Icons.business),
+                      _buildDetailRow(
+                          'Source Balance',
+                          '\$${sourceBalance.toStringAsFixed(2)}',
+                          Icons.account_balance_wallet),
+                    ]),
+                    SizedBox(height: 16),
+                    _buildDetailSection('Timestamps', [
+                      _buildDetailRow('Created', income['created_at'] ?? 'N/A',
+                          Icons.access_time),
+                      _buildDetailRow('Updated', income['updated_at'] ?? 'N/A',
+                          Icons.update),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+            // Footer
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF72140C),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, [IconData? icon]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: Color(0xFF72140C),
+                size: 20,
+              ),
+            ),
+            SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[900],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailSection(String title, List<Widget> children) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF72140C),
+            ),
+          ),
+          SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editIncome(int id) async {
+    try {
+      final response = await _api.getIncome(id);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final income = data['data'];
+          // Pre-fill controllers
+          _amountController.text = income['amount']?.toString() ?? '';
+          _dateController.text = income['date'] ?? '';
+          _notesController.text = income['notes'] ?? '';
+          _incomeSourceId = income['income_source_id'];
+
+          final result = await BottomSheetForm.show<Map<String, dynamic>>(
+            context: context,
+            title: 'Edit Income',
+            header: Container(
+              width: double.infinity,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.edit,
+                size: 40,
+                color: Color(0xFF72140C),
+              ),
+            ),
+            formKey: _formKey,
+            formFields: [
+              _buildIncomeSourceDropdown(),
+              SizedBox(height: 16),
+              _buildAmountField(),
+              SizedBox(height: 16),
+              _buildDateField(),
+              SizedBox(height: 16),
+              _buildNotesField(),
+            ],
+            onCancel: () => Navigator.of(context).pop(),
+            onSubmit: () {
+              Navigator.of(context).pop({
+                'income_source_id':
+                    _incomeSourceId ?? (_incomeSources.first['id'] as String),
+                'amount': double.parse(_amountController.text),
+                'date': _dateController.text,
+                'notes': _notesController.text,
+              });
+            },
+            submitText: 'Update Income',
+          );
+
+          if (result != null) {
+            final updateResponse = await _api.updateIncome(id, result);
+            if (updateResponse.statusCode == 200) {
+              _fetchIncomes();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Income updated successfully')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update income')),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   Widget _buildIncomeSourceDropdown() {
-    return FormField<int>(
-      builder: (FormFieldState<int> state) {
+    return FormField<String>(
+      builder: (FormFieldState<String> state) {
         return InputDecorator(
           decoration: InputDecoration(
             labelText: 'Income Source',
@@ -212,16 +568,16 @@ class _IncomeScreenState extends State<IncomeScreen> {
             errorText: state.hasError ? state.errorText : null,
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
+            child: DropdownButton<String>(
               value: _incomeSourceId,
               isExpanded: true,
               items: _incomeSources.map((source) {
-                return DropdownMenuItem<int>(
-                  value: source['id'],
+                return DropdownMenuItem<String>(
+                  value: source['id'] as String,
                   child: Text(source['name'] ?? 'Unknown'),
                 );
               }).toList(),
-              onChanged: (value) {
+              onChanged: (String? value) {
                 setState(() {
                   _incomeSourceId = value;
                 });
@@ -376,7 +732,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
                             final amount = double.tryParse(
                                     income['amount']?.toString() ?? '0') ??
                                 0.0;
-                            final sourceName = income['source']['name'] ?? 'Unknown';
+                            final sourceName =
+                                income['source']['name'] ?? 'Unknown';
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
@@ -407,25 +764,45 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                       size: 20,
                                     ),
                                   ),
-                                  title: Text(income['notes'] ??
-                                      'No notes'),
+                                  title: Text(income['notes'] ?? 'No notes'),
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                           '${income['date'] ?? 'N/A'} • $sourceName'),
-                                      Text('${income['category'] ?? ''} • \$${amount.toStringAsFixed(2)}'),
+                                      Text(
+                                          '${income['category'] ?? ''} • \$${amount.toStringAsFixed(2)}'),
                                     ],
                                   ),
                                   trailing: PopupMenuButton<String>(
                                     icon: const Icon(Icons.more_vert),
                                     onSelected: (value) {
-                                      if (value == 'delete') {
+                                      if (value == 'view') {
+                                        _viewIncomeDetails(income);
+                                      } else if (value == 'edit') {
+                                        _editIncome(income['id']);
+                                      } else if (value == 'delete') {
                                         _deleteIncome(income['id']);
                                       }
                                     },
                                     itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'view',
+                                        child: ListTile(
+                                          leading: Icon(Icons.visibility,
+                                              color: Colors.blue),
+                                          title: Text('View Details'),
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: ListTile(
+                                          leading: Icon(Icons.edit,
+                                              color: Colors.orange),
+                                          title: Text('Edit'),
+                                        ),
+                                      ),
                                       const PopupMenuItem(
                                         value: 'delete',
                                         child: ListTile(
@@ -439,7 +816,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                 ),
                               ),
                             );
-
                           },
                         ),
                       ),
