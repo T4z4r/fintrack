@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_provider.dart';
+import '../widgets/custom_loader.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -252,9 +253,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ? SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(
+                            child: CustomLoader(
+                              size: 24,
                               color: Colors.white,
-                              strokeWidth: 2,
                             ),
                           )
                         : Text(

@@ -6,6 +6,7 @@ import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import '../widgets/bottom_sheet_form.dart';
 import '../widgets/date_picker_field.dart';
+import '../widgets/custom_loader.dart';
 
 class IncomeScreen extends StatefulWidget {
   @override
@@ -274,7 +275,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  CustomLoader(
                     color: Color(0xFF72140C),
                   ),
                   SizedBox(height: 16),

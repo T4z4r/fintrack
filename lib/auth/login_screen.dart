@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_provider.dart';
+import '../widgets/custom_loader.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -145,13 +146,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: _isLoading
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
+                        ? CustomLoader(
+                            size: 24,
+                            color: Colors.white,
                           )
                         : Text(
                             'Sign In',

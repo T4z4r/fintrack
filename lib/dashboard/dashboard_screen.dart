@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
 import 'package:intl/intl.dart';
+import '../widgets/custom_loader.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -298,7 +299,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? Center(child: CustomLoader(color: Theme.of(context).primaryColor))
         : _dashboardData != null
             ? Padding(
                 padding: EdgeInsets.all(8.0),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import '../widgets/custom_loader.dart';
 
 class DebtScreen extends StatefulWidget {
   @override
@@ -226,7 +227,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  CustomLoader(
                     color: Color(0xFF72140C),
                   ),
                   SizedBox(height: 16),

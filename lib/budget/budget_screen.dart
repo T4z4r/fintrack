@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import '../widgets/custom_loader.dart';
 
 class BudgetScreen extends StatefulWidget {
   @override
   _BudgetScreenState createState() => _BudgetScreenState();
 }
 
-class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMixin {
+class _BudgetScreenState extends State<BudgetScreen>
+    with TickerProviderStateMixin {
   late Api _api;
   List<Map<String, dynamic>> _budgets = [];
   Map<int, List<Map<String, dynamic>>> _budgetItems = {};
@@ -40,15 +42,17 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
           setState(() {
             _budgets = List<Map<String, dynamic>>.from(budgetsData['data']);
           });
-          
+
           // Fetch budget items for each budget
           for (var budget in _budgets) {
-            final itemsResponse = await _api.getBudgetItemsForBudget(budget['id']);
+            final itemsResponse =
+                await _api.getBudgetItemsForBudget(budget['id']);
             if (itemsResponse.statusCode == 200) {
               final itemsData = json.decode(itemsResponse.body);
               if (itemsData['success'] == true) {
                 setState(() {
-                  _budgetItems[budget['id']] = List<Map<String, dynamic>>.from(itemsData['data']);
+                  _budgetItems[budget['id']] =
+                      List<Map<String, dynamic>>.from(itemsData['data']);
                 });
               }
             }
@@ -147,7 +151,8 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete Budget'),
-        content: Text('Are you sure you want to delete this budget? This will also delete all budget items.'),
+        content: Text(
+            'Are you sure you want to delete this budget? This will also delete all budget items.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -228,7 +233,7 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  CustomLoader(
                     color: Color(0xFF72140C),
                   ),
                   SizedBox(height: 16),
@@ -316,7 +321,7 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
               itemBuilder: (context, index) {
                 final budget = _budgets[index];
                 final items = _budgetItems[budget['id']] ?? [];
-                
+
                 return Card(
                   margin: EdgeInsets.only(bottom: 12),
                   elevation: 2,
@@ -388,9 +393,11 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                                   value: 'delete',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                      Icon(Icons.delete,
+                                          size: 18, color: Colors.red),
                                       SizedBox(width: 8),
-                                      Text('Delete', style: TextStyle(color: Colors.red)),
+                                      Text('Delete',
+                                          style: TextStyle(color: Colors.red)),
                                     ],
                                   ),
                                 ),
@@ -420,24 +427,25 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                           ),
                           SizedBox(height: 8),
                           ...items.take(3).map((item) => Padding(
-                            padding: EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  item['name'] ?? 'Unnamed Item',
-                                  style: TextStyle(fontSize: 13),
+                                padding: EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      item['name'] ?? 'Unnamed Item',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                    Text(
+                                      '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )),
+                              )),
                           if (items.length > 3)
                             Text(
                               '...and ${items.length - 3} more items',
@@ -459,7 +467,7 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
 
   Widget _buildBudgetItemsTab() {
     final allItems = _budgetItems.values.expand((items) => items).toList();
-    
+
     return allItems.isEmpty
         ? Center(
             child: Column(
@@ -498,10 +506,16 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
               itemCount: allItems.length,
               itemBuilder: (context, index) {
                 final item = allItems[index];
-                final plannedAmount = double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0;
-                final spentAmount = double.tryParse(item['spent_amount']?.toString() ?? '0') ?? 0.0;
-                final progress = plannedAmount > 0 ? (spentAmount / plannedAmount) * 100 : 0.0;
-                
+                final plannedAmount = double.tryParse(
+                        item['planned_amount']?.toString() ?? '0') ??
+                    0.0;
+                final spentAmount =
+                    double.tryParse(item['spent_amount']?.toString() ?? '0') ??
+                        0.0;
+                final progress = plannedAmount > 0
+                    ? (spentAmount / plannedAmount) * 100
+                    : 0.0;
+
                 return Card(
                   margin: EdgeInsets.only(bottom: 12),
                   elevation: 2,
@@ -518,12 +532,15 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                             Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: progress > 100 ? Colors.red.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                                color: progress > 100
+                                    ? Colors.red.withOpacity(0.1)
+                                    : Colors.blue.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 progress > 100 ? Icons.warning : Icons.list_alt,
-                                color: progress > 100 ? Colors.red : Colors.blue,
+                                color:
+                                    progress > 100 ? Colors.red : Colors.blue,
                                 size: 20,
                               ),
                             ),
@@ -573,9 +590,11 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                                   value: 'delete',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                      Icon(Icons.delete,
+                                          size: 18, color: Colors.red),
                                       SizedBox(width: 8),
-                                      Text('Delete', style: TextStyle(color: Colors.red)),
+                                      Text('Delete',
+                                          style: TextStyle(color: Colors.red)),
                                     ],
                                   ),
                                 ),
@@ -612,7 +631,9 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: progress > 100 ? Colors.red : Colors.blue,
+                                    color: progress > 100
+                                        ? Colors.red
+                                        : Colors.blue,
                                   ),
                                 ),
                               ],
@@ -625,14 +646,20 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: progress > 100 ? Colors.red : Colors.blue,
+                                    color: progress > 100
+                                        ? Colors.red
+                                        : Colors.blue,
                                   ),
                                 ),
                                 Text(
-                                  progress > 100 ? 'Over Budget' : 'Within Budget',
+                                  progress > 100
+                                      ? 'Over Budget'
+                                      : 'Within Budget',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: progress > 100 ? Colors.red : Colors.green,
+                                    color: progress > 100
+                                        ? Colors.red
+                                        : Colors.green,
                                   ),
                                 ),
                               ],
@@ -742,7 +769,8 @@ class _BudgetFormDialogState extends State<BudgetFormDialog> {
 class BudgetItemFormDialog extends StatefulWidget {
   final int budgetId;
 
-  const BudgetItemFormDialog({Key? key, required this.budgetId}) : super(key: key);
+  const BudgetItemFormDialog({Key? key, required this.budgetId})
+      : super(key: key);
 
   @override
   _BudgetItemFormDialogState createState() => _BudgetItemFormDialogState();
@@ -776,8 +804,9 @@ class _BudgetItemFormDialogState extends State<BudgetItemFormDialog> {
                 controller: _plannedAmountController,
                 decoration: InputDecoration(labelText: 'Planned Amount'),
                 keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter planned amount' : null,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter planned amount'
+                    : null,
               ),
               TextFormField(
                 controller: _categoryController,
@@ -832,7 +861,8 @@ class _BudgetItemFormDialogState extends State<BudgetItemFormDialog> {
 
 class UpdateSpentAmountDialog extends StatefulWidget {
   @override
-  _UpdateSpentAmountDialogState createState() => _UpdateSpentAmountDialogState();
+  _UpdateSpentAmountDialogState createState() =>
+      _UpdateSpentAmountDialogState();
 }
 
 class _UpdateSpentAmountDialogState extends State<UpdateSpentAmountDialog> {

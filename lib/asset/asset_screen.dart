@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../core/api.dart';
 import '../auth/auth_provider.dart';
+import '../widgets/custom_loader.dart';
 
 class AssetScreen extends StatefulWidget {
   @override
@@ -165,7 +166,7 @@ class _AssetScreenState extends State<AssetScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  CustomLoader(
                     color: Color(0xFF72140C),
                   ),
                   SizedBox(height: 16),

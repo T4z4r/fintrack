@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'custom_loader.dart';
 
 class BottomSheetForm extends StatefulWidget {
   final String title;
@@ -154,14 +155,9 @@ class _BottomSheetFormState extends State<BottomSheetForm> {
                           elevation: 0,
                         ),
                         child: widget.isLoading
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
+                            ? CustomLoader(
+                                size: 20,
+                                color: Colors.white,
                               )
                             : Text(
                                 widget.submitText,
