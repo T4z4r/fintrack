@@ -23,8 +23,7 @@ class _AssetScreenState extends State<AssetScreen> {
   final _assetNameController = TextEditingController();
   final _assetValueController = TextEditingController();
   final _assetAcquisitionDateController = TextEditingController();
-  final _assetDescriptionController = TextEditingController();
-  String _assetType = 'real_estate';
+  String _assetCategory = 'Vehicle';
 
   @override
   void initState() {
@@ -40,7 +39,6 @@ class _AssetScreenState extends State<AssetScreen> {
     _assetNameController.dispose();
     _assetValueController.dispose();
     _assetAcquisitionDateController.dispose();
-    _assetDescriptionController.dispose();
     super.dispose();
   }
 
@@ -76,8 +74,7 @@ class _AssetScreenState extends State<AssetScreen> {
     _assetNameController.clear();
     _assetValueController.clear();
     _assetAcquisitionDateController.clear();
-    _assetDescriptionController.clear();
-    _assetType = 'real_estate';
+    _assetCategory = 'Vehicle';
 
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
@@ -99,22 +96,19 @@ class _AssetScreenState extends State<AssetScreen> {
       formFields: [
         _buildAssetNameField(),
         SizedBox(height: 16),
-        _buildAssetTypeField(),
+        _buildAssetCategoryField(),
         SizedBox(height: 16),
         _buildAssetValueField(),
         SizedBox(height: 16),
         _buildAssetAcquisitionDateField(),
-        SizedBox(height: 16),
-        _buildAssetDescriptionField(),
       ],
       onCancel: () => Navigator.of(context).pop(),
       onSubmit: () {
         Navigator.of(context).pop({
           'name': _assetNameController.text,
-          'type': _assetType,
+          'category': _assetCategory,
           'value': double.parse(_assetValueController.text),
           'acquisition_date': _assetAcquisitionDateController.text,
-          'description': _assetDescriptionController.text,
         });
       },
       submitText: 'Add Asset',
@@ -180,29 +174,373 @@ class _AssetScreenState extends State<AssetScreen> {
     }
   }
 
-  IconData _getAssetIcon(String? type) {
-    switch (type) {
-      case 'real_estate':
+  Future<void> _viewAssetDetails(Map<String, dynamic> asset) async {
+    final value = double.tryParse(asset['value']?.toString() ?? '0') ?? 0.0;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: EdgeInsets.only(top: 50),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.05),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF72140C),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF72140C).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _getAssetIcon(asset['category']),
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          asset['name'] ?? 'Unnamed Asset',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF72140C),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Complete asset information and details',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Container(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Value highlight
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF72140C).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Color(0xFF72140C).withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.attach_money,
+                            color: Color(0xFF72140C),
+                            size: 24,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '\$${value.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF72140C),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    // Details
+                    _buildDetailSection('Asset Information', [
+                      _buildDetailRow(
+                          'Name', asset['name'] ?? 'N/A', Icons.business),
+                      _buildDetailRow('Category', asset['category'] ?? 'N/A',
+                          Icons.category),
+                      _buildDetailRow('Value', '\$${value.toStringAsFixed(2)}',
+                          Icons.attach_money),
+                      _buildDetailRow(
+                          'Acquisition Date',
+                          asset['acquisition_date'] ?? 'N/A',
+                          Icons.calendar_today),
+                    ]),
+                    SizedBox(height: 16),
+                    _buildDetailSection('Timestamps', [
+                      _buildDetailRow('Created', asset['created_at'] ?? 'N/A',
+                          Icons.access_time),
+                      _buildDetailRow('Updated', asset['updated_at'] ?? 'N/A',
+                          Icons.update),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+            // Footer
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF72140C),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, [IconData? icon]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: Color(0xFF72140C),
+                size: 20,
+              ),
+            ),
+            SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[900],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailSection(String title, List<Widget> children) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF72140C),
+            ),
+          ),
+          SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editAsset(int id) async {
+    try {
+      final response = await _api.getAsset(id);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final asset = data['data'];
+          // Pre-fill controllers
+          _assetNameController.text = asset['name'] ?? '';
+          _assetValueController.text = asset['value']?.toString() ?? '';
+          _assetAcquisitionDateController.text =
+              asset['acquisition_date'] ?? '';
+          _assetCategory = asset['category'] ?? 'Vehicle';
+
+          final result = await BottomSheetForm.show<Map<String, dynamic>>(
+            context: context,
+            title: 'Edit Asset',
+            header: Container(
+              width: double.infinity,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Color(0xFF72140C).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.edit,
+                size: 40,
+                color: Color(0xFF72140C),
+              ),
+            ),
+            formKey: _assetFormKey,
+            formFields: [
+              _buildAssetNameField(),
+              SizedBox(height: 16),
+              _buildAssetCategoryField(),
+              SizedBox(height: 16),
+              _buildAssetValueField(),
+              SizedBox(height: 16),
+              _buildAssetAcquisitionDateField(),
+            ],
+            onCancel: () => Navigator.of(context).pop(),
+            onSubmit: () {
+              Navigator.of(context).pop({
+                'name': _assetNameController.text,
+                'category': _assetCategory,
+                'value': double.parse(_assetValueController.text),
+                'acquisition_date': _assetAcquisitionDateController.text,
+              });
+            },
+            submitText: 'Update Asset',
+          );
+
+          if (result != null) {
+            final updateResponse = await _api.updateAsset(id, result);
+            if (updateResponse.statusCode == 200) {
+              _fetchAssets();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Asset updated successfully')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update asset')),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  IconData _getAssetIcon(String? category) {
+    switch (category) {
+      case 'Real Estate':
         return Icons.home;
-      case 'vehicle':
+      case 'Vehicle':
         return Icons.directions_car;
-      case 'jewelry':
+      case 'Jewelry':
         return Icons.wallet_giftcard;
-      case 'other':
+      case 'Other':
       default:
         return Icons.inventory;
     }
   }
 
-  Color _getAssetColor(String? type) {
-    switch (type) {
-      case 'real_estate':
+  Color _getAssetColor(String? category) {
+    switch (category) {
+      case 'Real Estate':
         return Colors.blue;
-      case 'vehicle':
+      case 'Vehicle':
         return Colors.green;
-      case 'jewelry':
+      case 'Jewelry':
         return Colors.purple;
-      case 'other':
+      case 'Other':
       default:
         return Colors.orange;
     }
@@ -216,17 +554,17 @@ class _AssetScreenState extends State<AssetScreen> {
     );
   }
 
-  Widget _buildAssetTypeField() {
+  Widget _buildAssetCategoryField() {
     return DropdownButtonFormField<String>(
-      value: _assetType,
-      decoration: InputDecoration(labelText: 'Type'),
-      items: ['real_estate', 'vehicle', 'jewelry', 'other']
-          .map((type) => DropdownMenuItem(
-                value: type,
-                child: Text(type.replaceAll('_', ' ')),
+      value: _assetCategory,
+      decoration: InputDecoration(labelText: 'Category'),
+      items: ['Vehicle', 'Jewelry', 'Real Estate', 'Other']
+          .map((category) => DropdownMenuItem(
+                value: category,
+                child: Text(category),
               ))
           .toList(),
-      onChanged: (value) => setState(() => _assetType = value!),
+      onChanged: (value) => setState(() => _assetCategory = value!),
     );
   }
 
@@ -248,21 +586,13 @@ class _AssetScreenState extends State<AssetScreen> {
     );
   }
 
-  Widget _buildAssetDescriptionField() {
-    return TextFormField(
-      controller: _assetDescriptionController,
-      decoration: InputDecoration(labelText: 'Description'),
-      maxLines: 3,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final filteredAssets = _assets.where((asset) {
       final query = _searchQuery.toLowerCase();
       final name = (asset['name'] ?? '').toLowerCase();
-      final type = (asset['type'] ?? '').toLowerCase();
-      return name.contains(query) || type.contains(query);
+      final category = (asset['category'] ?? '').toLowerCase();
+      return name.contains(query) || category.contains(query);
     }).toList();
 
     return Scaffold(
@@ -344,8 +674,8 @@ class _AssetScreenState extends State<AssetScreen> {
                             final value = double.tryParse(
                                     asset['value']?.toString() ?? '0') ??
                                 0.0;
-                            final icon = _getAssetIcon(asset['type']);
-                            final color = _getAssetColor(asset['type']);
+                            final icon = _getAssetIcon(asset['category']);
+                            final color = _getAssetColor(asset['category']);
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
@@ -382,18 +712,38 @@ class _AssetScreenState extends State<AssetScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                          '${asset['type']?.replaceAll('_', ' ') ?? 'N/A'} • Acquired: ${asset['acquisition_date'] ?? 'N/A'}'),
+                                          '${asset['category'] ?? 'N/A'} • Acquired: ${asset['acquisition_date'] ?? 'N/A'}'),
                                       Text('\$${value.toStringAsFixed(2)}'),
                                     ],
                                   ),
                                   trailing: PopupMenuButton<String>(
                                     icon: const Icon(Icons.more_vert),
                                     onSelected: (value) {
-                                      if (value == 'delete') {
+                                      if (value == 'view') {
+                                        _viewAssetDetails(asset);
+                                      } else if (value == 'edit') {
+                                        _editAsset(asset['id']);
+                                      } else if (value == 'delete') {
                                         _deleteAsset(asset['id']);
                                       }
                                     },
                                     itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'view',
+                                        child: ListTile(
+                                          leading: Icon(Icons.visibility,
+                                              color: Colors.blue),
+                                          title: Text('View Details'),
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: ListTile(
+                                          leading: Icon(Icons.edit,
+                                              color: Colors.orange),
+                                          title: Text('Edit'),
+                                        ),
+                                      ),
                                       const PopupMenuItem(
                                         value: 'delete',
                                         child: ListTile(
