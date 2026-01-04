@@ -530,140 +530,152 @@ class _BudgetScreenState extends State<BudgetScreen>
                 final items = _budgetItems[budget['id']] ?? [];
 
                 return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  elevation: 2,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF72140C).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.pie_chart,
-                                color: Color(0xFF72140C),
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    budget['name'] ?? 'Unnamed Budget',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    '${budget['time_period'] ?? 'N/A'} • ${budget['category_type'] ?? 'N/A'}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'add_item') {
-                                  _addBudgetItem(budget['id']);
-                                } else if (value == 'delete') {
-                                  _deleteBudget(budget['id']);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'add_item',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.add, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Add Item'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete,
-                                          size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Delete',
-                                          style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 4,
                         ),
-                        if (budget['description'] != null) ...[
-                          SizedBox(height: 12),
-                          Text(
-                            budget['description'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                        if (items.isNotEmpty) ...[
-                          SizedBox(height: 16),
-                          Text(
-                            'Budget Items (${items.length})',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF72140C),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          ...items.take(3).map((item) => Padding(
-                                padding: EdgeInsets.symmetric(vertical: 4),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF72140C).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.pie_chart,
+                                  color: Color(0xFF72140C),
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item['name'] ?? 'Unnamed Item',
-                                      style: TextStyle(fontSize: 13),
-                                    ),
-                                    Text(
-                                      '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                      budget['name'] ?? 'Unnamed Budget',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      '${budget['time_period'] ?? 'N/A'} • ${budget['category_type'] ?? 'N/A'}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
                                       ),
                                     ),
                                   ],
                                 ),
-                              )),
-                          if (items.length > 3)
+                              ),
+                              PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'add_item') {
+                                    _addBudgetItem(budget['id']);
+                                  } else if (value == 'delete') {
+                                    _deleteBudget(budget['id']);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'add_item',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.add, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Add Item'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete,
+                                            size: 18, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (budget['description'] != null) ...[
+                            SizedBox(height: 12),
                             Text(
-                              '...and ${items.length - 3} more items',
+                              budget['description'],
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                                fontStyle: FontStyle.italic,
+                                fontSize: 14,
+                                color: Colors.grey[600],
                               ),
                             ),
+                          ],
+                          if (items.isNotEmpty) ...[
+                            SizedBox(height: 16),
+                            Text(
+                              'Budget Items (${items.length})',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF72140C),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            ...items.take(3).map((item) => Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        item['name'] ?? 'Unnamed Item',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      Text(
+                                        '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                            if (items.length > 3)
+                              Text(
+                                '...and ${items.length - 3} more items',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 );
@@ -724,164 +736,76 @@ class _BudgetScreenState extends State<BudgetScreen>
                     : 0.0;
 
                 return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  elevation: 2,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: progress > 100
-                                    ? Colors.red.withOpacity(0.1)
-                                    : Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                progress > 100 ? Icons.warning : Icons.list_alt,
-                                color:
-                                    progress > 100 ? Colors.red : Colors.blue,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['name'] ?? 'Unnamed Item',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    '${item['category'] ?? 'N/A'} • ${item['category_type'] ?? 'N/A'}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'update_spent') {
-                                  _updateBudgetItemSpentAmount(item['id']);
-                                } else if (value == 'delete') {
-                                  _deleteBudgetItem(item['id']);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'update_spent',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Update Spent'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete,
-                                          size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Delete',
-                                          style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 4,
                         ),
-                        if (item['description'] != null) ...[
-                          SizedBox(height: 12),
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: progress > 100
+                              ? Colors.red.withOpacity(0.1)
+                              : Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          progress > 100 ? Icons.warning : Icons.list_alt,
+                          color: progress > 100 ? Colors.red : Colors.blue,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(item['name'] ?? 'Unnamed Item'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            item['description'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              '${item['category'] ?? 'N/A'} • ${item['category_type'] ?? 'N/A'}'),
+                          Text(
+                              'Planned: \$${plannedAmount.toStringAsFixed(2)} • Spent: \$${spentAmount.toStringAsFixed(2)}'),
+                          Text(
+                              '${progress.toStringAsFixed(1)}% • ${progress > 100 ? 'Over Budget' : 'Within Budget'}'),
+                          if (item['description'] != null)
+                            Text(item['description']),
+                        ],
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          if (value == 'update_spent') {
+                            _updateBudgetItemSpentAmount(item['id']);
+                          } else if (value == 'delete') {
+                            _deleteBudgetItem(item['id']);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'update_spent',
+                            child: ListTile(
+                              leading: Icon(Icons.edit, color: Colors.blue),
+                              title: Text('Update Spent'),
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: ListTile(
+                              leading: Icon(Icons.delete, color: Colors.red),
+                              title: Text('Delete'),
                             ),
                           ),
                         ],
-                        SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Planned: \$${plannedAmount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Spent: \$${spentAmount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: progress > 100
-                                        ? Colors.red
-                                        : Colors.blue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${progress.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: progress > 100
-                                        ? Colors.red
-                                        : Colors.blue,
-                                  ),
-                                ),
-                                Text(
-                                  progress > 100
-                                      ? 'Over Budget'
-                                      : 'Within Budget',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: progress > 100
-                                        ? Colors.red
-                                        : Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: progress > 100 ? 1.0 : progress / 100,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            progress > 100 ? Colors.red : Colors.blue,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 );
@@ -890,4 +814,3 @@ class _BudgetScreenState extends State<BudgetScreen>
           );
   }
 }
-
