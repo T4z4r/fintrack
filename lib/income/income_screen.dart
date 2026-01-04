@@ -321,7 +321,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(8),
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -340,7 +340,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                         onRefresh: _fetchIncomes,
                         color: Color(0xFF72140C),
                         child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           itemCount: filteredIncomes.length,
                           itemBuilder: (context, index) {
                             final income = filteredIncomes[index];
@@ -357,8 +357,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 10),
-                              color: Theme.of(context).cardColor,
+                                  vertical: 2, horizontal: 0),
+                              color: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -375,12 +375,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   leading: Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
+                                      color: Color(0xFF72140C).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
                                       Icons.trending_up,
-                                      color: Colors.green,
+                                      color: Color(0xFF72140C),
                                       size: 20,
                                     ),
                                   ),
@@ -416,6 +416,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                 ),
                               ),
                             );
+                       
                           },
                         ),
                       ),

@@ -301,7 +301,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? Center(child: CircularProgressIndicator())
         : _dashboardData != null
             ? Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(8.0),
                 child: ListView(
                   children: [
                     _buildWelcomeSection(),
