@@ -315,6 +315,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       final amount = double.tryParse(
                               income['amount']?.toString() ?? '0') ??
                           0.0;
+                      final incomeSource = _incomeSources.firstWhere(
+                        (source) => source['id'] == income['income_source_id'],
+                        orElse: () => {'name': 'Unknown'},
+                      );
+                      final sourceName = incomeSource['name'] ?? 'Unknown';
 
                       return Card(
                         margin: EdgeInsets.only(bottom: 12),
@@ -338,7 +343,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   size: 24,
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,31 +357,48 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      income['date'] ?? 'N/A',
+                                      '${income['date'] ?? 'N/A'} • $sourceName',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[600],
                                       ),
                                     ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '\$${amount.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '\$${amount.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
+                              PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    _deleteIncome(income['id']);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete,
+                                            size: 18, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () =>
-                                        _deleteIncome(income['id']),
                                   ),
                                 ],
                               ),

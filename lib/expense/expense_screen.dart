@@ -305,7 +305,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     itemCount: _expenses.length,
                     itemBuilder: (context, index) {
                       final expense = _expenses[index];
-                      final amount = double.tryParse(expense['amount']?.toString() ?? '0') ?? 0.0;
+                      final amount = double.tryParse(
+                              expense['amount']?.toString() ?? '0') ??
+                          0.0;
 
                       return Card(
                         margin: EdgeInsets.only(bottom: 12),
@@ -329,7 +331,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   size: 24,
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,32 +345,23 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                       ),
                                     ),
                                     SizedBox(height: 4),
+                                    Text(
+                                      '${expense['date'] ?? 'N/A'} • ${expense['category'] ?? 'N/A'} • ${expense['payment_source'] ?? 'N/A'}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
                                     Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[200],
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            expense['category'] ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
                                         Text(
-                                          expense['date'] ?? 'N/A',
+                                          '\$${amount.toStringAsFixed(2)}',
                                           style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red,
                                           ),
                                         ),
                                       ],
@@ -376,22 +369,25 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   ],
                                 ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '\$${amount.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red,
+                              PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    _deleteExpense(expense['id']);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete,
+                                            size: 18, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () =>
-                                        _deleteExpense(expense['id']),
                                   ),
                                 ],
                               ),
