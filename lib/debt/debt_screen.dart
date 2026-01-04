@@ -575,8 +575,8 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
               itemBuilder: (context, index) {
                 final payment = _debtPayments[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 4, horizontal: 10),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                   color: Theme.of(context).cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
@@ -603,13 +603,16 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                           size: 20,
                         ),
                       ),
-                      title: Text(payment['payment_method'] ?? 'Unknown Method'),
+                      title:
+                          Text(payment['payment_method'] ?? 'Unknown Method'),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${payment['payment_date'] ?? 'N/A'} • Debt ID: ${payment['debt_id'] ?? 'N/A'}'),
+                          Text(
+                              '${payment['payment_date'] ?? 'N/A'} • Debt ID: ${payment['debt_id'] ?? 'N/A'}'),
                           if (payment['notes'] != null) Text(payment['notes']),
-                          Text('\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}'),
+                          Text(
+                              '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}'),
                         ],
                       ),
                       trailing: PopupMenuButton<String>(
