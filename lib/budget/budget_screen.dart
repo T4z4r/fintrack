@@ -38,6 +38,12 @@ class _BudgetScreenState extends State<BudgetScreen>
   final _updateSpentFormKey = GlobalKey<FormState>();
   final _spentAmountController = TextEditingController();
 
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  final _budgetItemsSearchController = TextEditingController();
+  String _budgetItemsSearchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +63,8 @@ class _BudgetScreenState extends State<BudgetScreen>
     _budgetItemCategoryController.dispose();
     _budgetItemDescriptionController.dispose();
     _spentAmountController.dispose();
+    _searchController.dispose();
+    _budgetItemsSearchController.dispose();
     super.dispose();
   }
 
@@ -957,404 +965,502 @@ class _BudgetScreenState extends State<BudgetScreen>
                 ),
               ],
             ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(
-              onPressed: _addBudget,
-              backgroundColor: Color(0xFF72140C),
-              child: Icon(Icons.add, color: Colors.white),
-              tooltip: 'Add Budget',
-            )
-          : null,
     );
   }
 
   Widget _buildBudgetsTab() {
-    return _budgets.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.pie_chart_outline,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'No budgets found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Create your first budget to get started',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          )
-        : RefreshIndicator(
-            onRefresh: _fetchData,
-            color: Color(0xFF72140C),
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: _budgets.length,
-              itemBuilder: (context, index) {
-                final budget = _budgets[index];
-                final items = _budgetItems[budget['id']] ?? [];
+    final filteredBudgets = _budgets.where((budget) {
+      final query = _searchQuery.toLowerCase();
+      final name = (budget['name'] ?? '').toLowerCase();
+      return name.contains(query);
+    }).toList();
 
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search Budget ',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0, horizontal: 10),
+                    ),
+                    onChanged: (value) => setState(() => _searchQuery = value),
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          width: 4,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () => _addBudget(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4)),
+                ),
+                icon: Icon(Icons.add,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                label: const Text('Add Budget'),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: filteredBudgets.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.pie_chart_outline,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No budgets found',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
                         ),
                       ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF72140C).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.pie_chart,
-                                  color: Color(0xFF72140C),
-                                  size: 20,
-                                ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Create your first budget to get started',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Color(0xFF72140C),
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(16),
+                    itemCount: filteredBudgets.length,
+                    itemBuilder: (context, index) {
+                      final budget = filteredBudgets[index];
+                      final items = _budgetItems[budget['id']] ?? [];
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 2, horizontal: 0),
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: Theme.of(context).primaryColor,
+                                width: 4,
                               ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Text(
-                                      budget['name'] ?? 'Unnamed Budget',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFF72140C).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.pie_chart,
+                                        color: Color(0xFF72140C),
+                                        size: 20,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            budget['name'] ?? 'Unnamed Budget',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            '${budget['time_period'] ?? 'N/A'} • ${budget['category_type'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'view') {
+                                          _viewBudgetDetails(budget);
+                                        } else if (value == 'edit') {
+                                          _editBudget(budget['id']);
+                                        } else if (value == 'add_item') {
+                                          _addBudgetItem(budget['id']);
+                                        } else if (value == 'delete') {
+                                          _deleteBudget(budget['id']);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'view',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.visibility,
+                                                  size: 18, color: Colors.blue),
+                                              SizedBox(width: 8),
+                                              Text('View Details'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.edit,
+                                                  size: 18,
+                                                  color: Colors.orange),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'add_item',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.add, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Add Item'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete,
+                                                  size: 18, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Delete',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                if (budget['description'] != null) ...[
+                                  SizedBox(height: 12),
+                                  Text(
+                                    budget['description'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                                SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
                                     Text(
-                                      '${budget['time_period'] ?? 'N/A'} • ${budget['category_type'] ?? 'N/A'}',
+                                      'Planned: \$${budget['planned_amount'] ?? '0'}',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Spent: \$${budget['spent_amount'] ?? '0'}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'view') {
-                                    _viewBudgetDetails(budget);
-                                  } else if (value == 'edit') {
-                                    _editBudget(budget['id']);
-                                  } else if (value == 'add_item') {
-                                    _addBudgetItem(budget['id']);
-                                  } else if (value == 'delete') {
-                                    _deleteBudget(budget['id']);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'view',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.visibility,
-                                            size: 18, color: Colors.blue),
-                                        SizedBox(width: 8),
-                                        Text('View Details'),
-                                      ],
-                                    ),
+                                SizedBox(height: 8),
+                                LinearProgressIndicator(
+                                  value:
+                                      (budget['usage_percentage'] ?? 0) / 100.0,
+                                  backgroundColor: Colors.grey[300],
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    (budget['calculated_status'] == 'exceeded')
+                                        ? Colors.red
+                                        : Color(0xFF72140C),
                                   ),
-                                  PopupMenuItem(
-                                    value: 'edit',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit,
-                                            size: 18, color: Colors.orange),
-                                        SizedBox(width: 8),
-                                        Text('Edit'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'add_item',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.add, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Add Item'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete,
-                                            size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Delete',
-                                            style:
-                                                TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (budget['description'] != null) ...[
-                            SizedBox(height: 12),
-                            Text(
-                              budget['description'],
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Planned: \$${budget['planned_amount'] ?? '0'}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
                                 ),
-                              ),
-                              Text(
-                                'Spent: \$${budget['spent_amount'] ?? '0'}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                SizedBox(height: 4),
+                                Text(
+                                  '${(budget['usage_percentage'] ?? 0).toStringAsFixed(1)}% used • \$${budget['remaining_amount'] ?? '0'} remaining',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: (budget['usage_percentage'] ?? 0) / 100.0,
-                            backgroundColor: Colors.grey[300],
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              (budget['calculated_status'] == 'exceeded')
-                                  ? Colors.red
-                                  : Color(0xFF72140C),
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            '${(budget['usage_percentage'] ?? 0).toStringAsFixed(1)}% used • \$${budget['remaining_amount'] ?? '0'} remaining',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          if (items.isNotEmpty) ...[
-                            SizedBox(height: 16),
-                            Text(
-                              'Budget Items (${items.length})',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF72140C),
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            ...items.take(3).map((item) => Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        item['name'] ?? 'Unnamed Item',
-                                        style: TextStyle(fontSize: 13),
-                                      ),
-                                      Text(
-                                        '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
+                                if (items.isNotEmpty) ...[
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Budget Items (${items.length})',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF72140C),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  ...items.take(3).map((item) => Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 4),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              item['name'] ?? 'Unnamed Item',
+                                              style: TextStyle(fontSize: 13),
+                                            ),
+                                            Text(
+                                              '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
+                                      )),
+                                  if (items.length > 3)
+                                    Text(
+                                      '...and ${items.length - 3} more items',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[500],
+                                        fontStyle: FontStyle.italic,
                                       ),
-                                    ],
-                                  ),
-                                )),
-                            if (items.length > 3)
-                              Text(
-                                '...and ${items.length - 3} more items',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[500],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                          ],
-                        ],
-                      ),
-                    ),
+                                    ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          );
+                ),
+        ),
+      ],
+    );
   }
 
   Widget _buildBudgetItemsTab() {
     final allItems = _budgetItems.values.expand((items) => items).toList();
+    final filteredItems = allItems.where((item) {
+      final query = _budgetItemsSearchQuery.toLowerCase();
+      final name = (item['name'] ?? '').toLowerCase();
+      final category = (item['category'] ?? '').toLowerCase();
+      return name.contains(query) || category.contains(query);
+    }).toList();
 
-    return allItems.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.list_alt_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'No budget items found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Add items to your budgets to get started',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _budgetItemsSearchController,
+            decoration: InputDecoration(
+              hintText: 'Search Budget Items',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _budgetItemsSearchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _budgetItemsSearchController.clear();
+                        setState(() => _budgetItemsSearchQuery = '');
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
             ),
-          )
-        : RefreshIndicator(
-            onRefresh: _fetchData,
-            color: Color(0xFF72140C),
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: allItems.length,
-              itemBuilder: (context, index) {
-                final item = allItems[index];
-                final plannedAmount = double.tryParse(
-                        item['planned_amount']?.toString() ?? '0') ??
-                    0.0;
-                final spentAmount =
-                    double.tryParse(item['spent_amount']?.toString() ?? '0') ??
-                        0.0;
-                final progress = plannedAmount > 0
-                    ? (spentAmount / plannedAmount) * 100
-                    : 0.0;
-
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+            onChanged: (value) =>
+                setState(() => _budgetItemsSearchQuery = value),
+          ),
+        ),
+        Expanded(
+          child: filteredItems.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.list_alt_outlined,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No budget items found',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Add items to your budgets to get started',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          width: 4,
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Color(0xFF72140C),
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(16),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      final plannedAmount = double.tryParse(
+                              item['planned_amount']?.toString() ?? '0') ??
+                          0.0;
+                      final spentAmount = double.tryParse(
+                              item['spent_amount']?.toString() ?? '0') ??
+                          0.0;
+                      final progress = plannedAmount > 0
+                          ? (spentAmount / plannedAmount) * 100
+                          : 0.0;
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 2, horizontal: 0),
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      ),
-                    ),
-                    child: ListTile(
-                      leading: Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: progress > 100
-                              ? Colors.red.withOpacity(0.1)
-                              : Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          progress > 100 ? Icons.warning : Icons.list_alt,
-                          color: progress > 100 ? Colors.red : Colors.blue,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(item['name'] ?? 'Unnamed Item'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                              '${item['category'] ?? 'N/A'} • ${item['category_type'] ?? 'N/A'}'),
-                          Text(
-                              'Planned: \$${plannedAmount.toStringAsFixed(2)} • Spent: \$${spentAmount.toStringAsFixed(2)}'),
-                          Text(
-                              '${progress.toStringAsFixed(1)}% • ${progress > 100 ? 'Over Budget' : 'Within Budget'}'),
-                          if (item['description'] != null)
-                            Text(item['description']),
-                        ],
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
-                        onSelected: (value) {
-                          if (value == 'update_spent') {
-                            _updateBudgetItemSpentAmount(item['id']);
-                          } else if (value == 'delete') {
-                            _deleteBudgetItem(item['id']);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'update_spent',
-                            child: ListTile(
-                              leading: Icon(Icons.edit, color: Colors.blue),
-                              title: Text('Update Spent'),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: Theme.of(context).primaryColor,
+                                width: 4,
+                              ),
                             ),
                           ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: ListTile(
-                              leading: Icon(Icons.delete, color: Colors.red),
-                              title: Text('Delete'),
+                          child: ListTile(
+                            leading: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: progress > 100
+                                    ? Colors.red.withOpacity(0.1)
+                                    : Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                progress > 100 ? Icons.warning : Icons.list_alt,
+                                color:
+                                    progress > 100 ? Colors.red : Colors.blue,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(item['name'] ?? 'Unnamed Item'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    '${item['category'] ?? 'N/A'} • ${item['category_type'] ?? 'N/A'}'),
+                                Text(
+                                    'Planned: \$${plannedAmount.toStringAsFixed(2)} • Spent: \$${spentAmount.toStringAsFixed(2)}'),
+                                Text(
+                                    '${progress.toStringAsFixed(1)}% • ${progress > 100 ? 'Over Budget' : 'Within Budget'}'),
+                                if (item['description'] != null)
+                                  Text(item['description']),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert),
+                              onSelected: (value) {
+                                if (value == 'update_spent') {
+                                  _updateBudgetItemSpentAmount(item['id']);
+                                } else if (value == 'delete') {
+                                  _deleteBudgetItem(item['id']);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'update_spent',
+                                  child: ListTile(
+                                    leading:
+                                        Icon(Icons.edit, color: Colors.blue),
+                                    title: Text('Update Spent'),
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: ListTile(
+                                    leading:
+                                        Icon(Icons.delete, color: Colors.red),
+                                    title: Text('Delete'),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          );
+                ),
+        ),
+      ],
+    );
   }
 }

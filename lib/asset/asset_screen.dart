@@ -648,18 +648,52 @@ class _AssetScreenState extends State<AssetScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(8),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          labelText: 'Search assets',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: 'Search Asset ',
+                                  prefixIcon: const Icon(Icons.search),
+                                  suffixIcon: _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() => _searchQuery = '');
+                                          },
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 0, horizontal: 10),
+                                ),
+                                onChanged: (value) =>
+                                    setState(() => _searchQuery = value),
+                              ),
+                            ),
                           ),
-                        ),
-                        onChanged: (value) =>
-                            setState(() => _searchQuery = value),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => _addAsset(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF72140C),
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                            icon: Icon(Icons.add,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                            label: const Text('Add'),
+                          ),
+                        ],
                       ),
                     ),
                     Expanded(
@@ -763,12 +797,6 @@ class _AssetScreenState extends State<AssetScreen> {
                     ),
                   ],
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addAsset,
-        backgroundColor: Color(0xFF72140C),
-        child: Icon(Icons.add, color: Colors.white),
-        tooltip: 'Add Asset',
-      ),
     );
   }
 }

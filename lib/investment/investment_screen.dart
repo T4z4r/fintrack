@@ -657,18 +657,52 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(8),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          labelText: 'Search investments',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: 'Search Investment ',
+                                  prefixIcon: const Icon(Icons.search),
+                                  suffixIcon: _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() => _searchQuery = '');
+                                          },
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 0, horizontal: 10),
+                                ),
+                                onChanged: (value) =>
+                                    setState(() => _searchQuery = value),
+                              ),
+                            ),
                           ),
-                        ),
-                        onChanged: (value) =>
-                            setState(() => _searchQuery = value),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => _addInvestment(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                            icon: Icon(Icons.add,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                            label: const Text('Add Investment'),
+                          ),
+                        ],
                       ),
                     ),
                     Expanded(
@@ -777,12 +811,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     ),
                   ],
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addInvestment,
-        backgroundColor: Color(0xFF72140C),
-        child: Icon(Icons.add, color: Colors.white),
-        tooltip: 'Add Investment',
-      ),
     );
   }
 }
