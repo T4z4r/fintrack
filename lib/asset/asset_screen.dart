@@ -13,6 +13,8 @@ class _AssetScreenState extends State<AssetScreen> {
   late Api _api;
   List<Map<String, dynamic>> _assets = [];
   bool _isLoading = true;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -20,6 +22,12 @@ class _AssetScreenState extends State<AssetScreen> {
     // Get the API instance from AuthProvider
     _api = Provider.of<AuthProvider>(context, listen: false).api;
     _fetchAssets();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchAssets() async {
@@ -144,6 +152,13 @@ class _AssetScreenState extends State<AssetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredAssets = _assets.where((asset) {
+      final query = _searchQuery.toLowerCase();
+      final name = (asset['name'] ?? '').toLowerCase();
+      final type = (asset['type'] ?? '').toLowerCase();
+      return name.contains(query) || type.contains(query);
+    }).toList();
+
     return Scaffold(
       body: _isLoading
           ? Center(
@@ -164,7 +179,7 @@ class _AssetScreenState extends State<AssetScreen> {
                 ],
               ),
             )
-          : _assets.isEmpty
+          : filteredAssets.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -194,15 +209,34 @@ class _AssetScreenState extends State<AssetScreen> {
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _fetchAssets,
-                  color: Color(0xFF72140C),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: _assets.length,
-                    itemBuilder: (context, index) {
-                      final asset = _assets[index];
-                      final value = double.tryParse(asset['value']?.toString() ?? '0') ?? 0.0;
+              : Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search assets',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _fetchAssets,
+                        color: Color(0xFF72140C),
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredAssets.length,
+                          itemBuilder: (context, index) {
+                       final asset = filteredAssets[index];
+                      final value =
+                          double.tryParse(asset['value']?.toString() ?? '0') ??
+                              0.0;
                       final icon = _getAssetIcon(asset['type']);
                       final color = _getAssetColor(asset['type']);
 
@@ -359,9 +393,12 @@ class _AssetScreenState extends State<AssetScreen> {
                         ),
                       );
                     },
-                  ),
-                ),
-      floatingActionButton: FloatingActionButton(
+                       ),
+                     ),
+                   ),
+                 ],
+               ),
+     floatingActionButton: FloatingActionButton(
         onPressed: _addAsset,
         backgroundColor: Color(0xFF72140C),
         child: Icon(Icons.add, color: Colors.white),

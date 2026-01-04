@@ -24,6 +24,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   final _dateController = TextEditingController();
   final _notesController = TextEditingController();
   final _paymentSourceController = TextEditingController();
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -40,6 +42,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _dateController.dispose();
     _notesController.dispose();
     _paymentSourceController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -247,6 +250,16 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredExpenses = _expenses.where((expense) {
+      final query = _searchQuery.toLowerCase();
+      final description = (expense['description'] ?? '').toLowerCase();
+      final category = (expense['category'] ?? '').toLowerCase();
+      final paymentSource = (expense['payment_source'] ?? '').toLowerCase();
+      return description.contains(query) ||
+          category.contains(query) ||
+          paymentSource.contains(query);
+    }).toList();
+
     return Scaffold(
       body: _isLoading
           ? Center(
@@ -267,7 +280,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 ],
               ),
             )
-          : _expenses.isEmpty
+          : filteredExpenses.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -297,71 +310,115 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _fetchExpenses,
-                  color: Color(0xFF72140C),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: _expenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = _expenses[index];
-                      final amount = double.tryParse(
-                              expense['amount']?.toString() ?? '0') ??
-                          0.0;
-
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              : Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search expenses',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.trending_down,
-                                  color: Colors.red,
-                                  size: 24,
-                                ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _fetchExpenses,
+                        color: Color(0xFF72140C),
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredExpenses.length,
+                          itemBuilder: (context, index) {
+                            final expense = filteredExpenses[index];
+                            final amount = double.tryParse(
+                                    expense['amount']?.toString() ?? '0') ??
+                                0.0;
+
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 12),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      expense['description'] ??
-                                          'No description',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                    Container(
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.trending_down,
+                                        color: Colors.red,
+                                        size: 24,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      '${expense['date'] ?? 'N/A'} • ${expense['category'] ?? 'N/A'} • ${expense['payment_source'] ?? 'N/A'}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            expense['description'] ??
+                                                'No description',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            '${expense['date'] ?? 'N/A'} • ${expense['category'] ?? 'N/A'} • ${expense['payment_source'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                '\$${amount.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '\$${amount.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.red,
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'delete') {
+                                          _deleteExpense(expense['id']);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete,
+                                                  size: 18, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Delete',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -369,34 +426,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   ],
                                 ),
                               ),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    _deleteExpense(expense['id']);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete,
-                                            size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Delete',
-                                            style:
-                                                TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addExpense,

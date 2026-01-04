@@ -13,6 +13,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   late Api _api;
   List<Map<String, dynamic>> _investments = [];
   bool _isLoading = true;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -20,6 +22,12 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     // Get the API instance from AuthProvider
     _api = Provider.of<AuthProvider>(context, listen: false).api;
     _fetchInvestments();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchInvestments() async {
@@ -116,6 +124,13 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredInvestments = _investments.where((investment) {
+      final query = _searchController.text.toLowerCase();
+      final name = (investment['name'] ?? '').toLowerCase();
+      final type = (investment['type'] ?? '').toLowerCase();
+      return name.contains(query) || type.contains(query);
+    }).toList();
+
     return Scaffold(
       body: _isLoading
           ? Center(
@@ -136,7 +151,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                 ],
               ),
             )
-          : _investments.isEmpty
+          : filteredInvestments.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -166,182 +181,211 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _fetchInvestments,
-                  color: Color(0xFF72140C),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: _investments.length,
-                    itemBuilder: (context, index) {
-                      final investment = _investments[index];
-                      final invested = double.tryParse(
-                              investment['amount_invested']?.toString() ??
-                                  '0') ??
-                          0.0;
-                      final current = double.tryParse(
-                              investment['current_value']?.toString() ?? '0') ??
-                          0.0;
-                      final profitLoss = current - invested;
-                      final isProfit = profitLoss >= 0;
-
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              : Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search investments',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          (isProfit ? Colors.green : Colors.red)
-                                              .withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.show_chart,
-                                      color:
-                                          isProfit ? Colors.green : Colors.red,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                        onChanged: (value) => setState(() {}),
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _fetchInvestments,
+                        color: Color(0xFF72140C),
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredInvestments.length,
+                          itemBuilder: (context, index) {
+                            final investment = filteredInvestments[index];
+                            final invested = double.tryParse(
+                                    investment['amount_invested']?.toString() ??
+                                        '0') ??
+                                0.0;
+                            final current = double.tryParse(
+                                    investment['current_value']?.toString() ??
+                                        '0') ??
+                                0.0;
+                            final profitLoss = current - invested;
+                            final isProfit = profitLoss >= 0;
+
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 12),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       children: [
-                                        Text(
-                                          investment['name'] ??
-                                              'Unnamed Investment',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: (isProfit
+                                                    ? Colors.green
+                                                    : Colors.red)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Icon(
+                                            Icons.show_chart,
+                                            color: isProfit
+                                                ? Colors.green
+                                                : Colors.red,
+                                            size: 20,
                                           ),
                                         ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          investment['type'] ?? 'N/A',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
+                                        SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                investment['name'] ??
+                                                    'Unnamed Investment',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                investment['type'] ?? 'N/A',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
                                           ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.delete,
+                                              color: Colors.red),
+                                          onPressed: () => _deleteInvestment(
+                                              investment['id']),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () =>
-                                        _deleteInvestment(investment['id']),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
+                                    SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Invested',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            Text(
+                                              '\$${invested.toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              'Current',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            Text(
+                                              '\$${current.toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: (isProfit
+                                                ? Colors.green
+                                                : Colors.red)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isProfit
+                                                ? Icons.trending_up
+                                                : Icons.trending_down,
+                                            size: 16,
+                                            color: isProfit
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            '${isProfit ? '+' : ''}\$${profitLoss.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isProfit
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (investment['description'] != null) ...[
+                                      SizedBox(height: 12),
                                       Text(
-                                        'Invested',
+                                        investment['description'],
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 14,
                                           color: Colors.grey[600],
                                         ),
                                       ),
-                                      Text(
-                                        '\$${invested.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
                                     ],
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        'Current',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                      Text(
-                                        '\$${current.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: (isProfit ? Colors.green : Colors.red)
-                                      .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isProfit
-                                          ? Icons.trending_up
-                                          : Icons.trending_down,
-                                      size: 16,
-                                      color:
-                                          isProfit ? Colors.green : Colors.red,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      '${isProfit ? '+' : ''}\$${profitLoss.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isProfit
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
-                              if (investment['description'] != null) ...[
-                                SizedBox(height: 12),
-                                Text(
-                                  investment['description'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addInvestment,

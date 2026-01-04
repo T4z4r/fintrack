@@ -23,6 +23,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
   final _amountController = TextEditingController();
   final _dateController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
   int? _incomeSourceId;
 
   @override
@@ -38,6 +40,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     _amountController.dispose();
     _dateController.dispose();
     _descriptionController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -254,6 +257,17 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredIncomes = _incomes.where((income) {
+      final query = _searchQuery.toLowerCase();
+      final description = (income['description'] ?? '').toLowerCase();
+      final incomeSource = _incomeSources.firstWhere(
+        (source) => source['id'] == income['income_source_id'],
+        orElse: () => {'name': ''},
+      );
+      final sourceName = (incomeSource['name'] ?? '').toLowerCase();
+      return description.contains(query) || sourceName.contains(query);
+    }).toList();
+
     return Scaffold(
       body: _isLoading
           ? Center(
@@ -274,7 +288,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 ],
               ),
             )
-          : _incomes.isEmpty
+          : filteredIncomes.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -304,75 +318,122 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _fetchIncomes,
-                  color: Color(0xFF72140C),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: _incomes.length,
-                    itemBuilder: (context, index) {
-                      final income = _incomes[index];
-                      final amount = double.tryParse(
-                              income['amount']?.toString() ?? '0') ??
-                          0.0;
-                      final incomeSource = _incomeSources.firstWhere(
-                        (source) => source['id'] == income['income_source_id'],
-                        orElse: () => {'name': 'Unknown'},
-                      );
-                      final sourceName = incomeSource['name'] ?? 'Unknown';
-
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              : Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search incomes',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.trending_up,
-                                  color: Colors.green,
-                                  size: 24,
-                                ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _fetchIncomes,
+                        color: Color(0xFF72140C),
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredIncomes.length,
+                          itemBuilder: (context, index) {
+                            final income = filteredIncomes[index];
+                            final amount = double.tryParse(
+                                    income['amount']?.toString() ?? '0') ??
+                                0.0;
+                            final incomeSource = _incomeSources.firstWhere(
+                              (source) =>
+                                  source['id'] == income['income_source_id'],
+                              orElse: () => {'name': 'Unknown'},
+                            );
+                            final sourceName =
+                                incomeSource['name'] ?? 'Unknown';
+
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 12),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      income['description'] ?? 'No description',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                    Container(
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.trending_up,
+                                        color: Colors.green,
+                                        size: 24,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      '${income['date'] ?? 'N/A'} • $sourceName',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            income['description'] ??
+                                                'No description',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            '${income['date'] ?? 'N/A'} • $sourceName',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                '\$${amount.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '\$${amount.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green,
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'delete') {
+                                          _deleteIncome(income['id']);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete,
+                                                  size: 18, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Delete',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -380,34 +441,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   ],
                                 ),
                               ),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    _deleteIncome(income['id']);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete,
-                                            size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Delete',
-                                            style:
-                                                TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addIncome,
