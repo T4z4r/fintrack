@@ -320,8 +320,9 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                 final debt = _debts[index];
                 final payments = _debtPaymentsByDebt[debt['id']] ?? [];
                 final totalPaid = payments.fold<double>(
-                    0, (sum, payment) => sum + (payment['amount'] ?? 0));
-                final remainingAmount = (debt['amount'] ?? 0) - totalPaid;
+                    0.0, (double sum, payment) => sum + (double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0));
+                final debtAmount = double.tryParse(debt['amount']?.toString() ?? '0') ?? 0.0;
+                final remainingAmount = debtAmount - totalPaid;
                 final isPaidOff = remainingAmount <= 0;
                 final isOverdue = debt['status'] == 'overdue';
 
@@ -421,7 +422,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 Text(
-                                  '\$${(debt['amount'] ?? 0).toStringAsFixed(2)}',
+                                  '\$${debtAmount.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -486,7 +487,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                                       style: TextStyle(fontSize: 12),
                                     ),
                                     Text(
-                                      '\$${payment['amount'] ?? 0}',
+                                      '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
@@ -631,7 +632,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '\$${payment['amount'] ?? 0}',
+                              '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

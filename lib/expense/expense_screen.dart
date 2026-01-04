@@ -305,7 +305,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     itemCount: _expenses.length,
                     itemBuilder: (context, index) {
                       final expense = _expenses[index];
-                      final amount = expense['amount'] ?? 0;
+                      final amount = double.tryParse(expense['amount']?.toString() ?? '0') ?? 0.0;
 
                       return Card(
                         margin: EdgeInsets.only(bottom: 12),

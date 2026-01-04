@@ -373,7 +373,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: Icons.savings,
                             title: 'Savings Rate',
                             value:
-                                '${(_dashboardData!['calculated_metrics']?['savings_rate'] ?? 0).toStringAsFixed(2)}%',
+                                '${(double.tryParse(_dashboardData!['calculated_metrics']?['savings_rate']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}%',
                             color: Colors.teal,
                           ),
                         ),
@@ -382,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: Icons.pie_chart,
                             title: 'Debt to Asset Ratio',
                             value:
-                                '${(_dashboardData!['calculated_metrics']?['debt_to_asset_ratio'] ?? 0).toStringAsFixed(2)}%',
+                                '${(double.tryParse(_dashboardData!['calculated_metrics']?['debt_to_asset_ratio']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}%',
                             color: Colors.indigo,
                           ),
                         ),

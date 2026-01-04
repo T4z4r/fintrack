@@ -202,7 +202,7 @@ class _AssetScreenState extends State<AssetScreen> {
                     itemCount: _assets.length,
                     itemBuilder: (context, index) {
                       final asset = _assets[index];
-                      final value = asset['value'] ?? 0;
+                      final value = double.tryParse(asset['value']?.toString() ?? '0') ?? 0.0;
                       final icon = _getAssetIcon(asset['type']);
                       final color = _getAssetColor(asset['type']);
 

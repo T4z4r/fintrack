@@ -429,7 +429,7 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
                                   style: TextStyle(fontSize: 13),
                                 ),
                                 Text(
-                                  '\$${item['planned_amount'] ?? 0}',
+                                  '\$${(double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -498,8 +498,8 @@ class _BudgetScreenState extends State<BudgetScreen> with TickerProviderStateMix
               itemCount: allItems.length,
               itemBuilder: (context, index) {
                 final item = allItems[index];
-                final plannedAmount = item['planned_amount'] ?? 0.0;
-                final spentAmount = item['spent_amount'] ?? 0.0;
+                final plannedAmount = double.tryParse(item['planned_amount']?.toString() ?? '0') ?? 0.0;
+                final spentAmount = double.tryParse(item['spent_amount']?.toString() ?? '0') ?? 0.0;
                 final progress = plannedAmount > 0 ? (spentAmount / plannedAmount) * 100 : 0.0;
                 
                 return Card(

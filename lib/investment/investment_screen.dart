@@ -174,8 +174,13 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     itemCount: _investments.length,
                     itemBuilder: (context, index) {
                       final investment = _investments[index];
-                      final invested = investment['amount_invested'] ?? 0;
-                      final current = investment['current_value'] ?? 0;
+                      final invested = double.tryParse(
+                              investment['amount_invested']?.toString() ??
+                                  '0') ??
+                          0.0;
+                      final current = double.tryParse(
+                              investment['current_value']?.toString() ?? '0') ??
+                          0.0;
                       final profitLoss = current - invested;
                       final isProfit = profitLoss >= 0;
 
