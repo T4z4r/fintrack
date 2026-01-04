@@ -341,7 +341,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     return DropdownButtonFormField<String>(
       value: _debtStatus,
       decoration: InputDecoration(labelText: 'Status'),
-      items: ['partial', 'paid', 'overdue']
+      items: ['unpaid', 'partial', 'paid', 'overdue']
           .map((status) => DropdownMenuItem(
                 value: status,
                 child: Text(status),
@@ -519,6 +519,11 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                 final remainingAmount = debtAmount - totalPaid;
                 final isPaidOff = remainingAmount <= 0;
                 final isOverdue = debt['status'] == 'overdue';
+                final Color statusColor = isPaidOff
+                    ? Colors.green
+                    : isOverdue
+                        ? Colors.red
+                        : Colors.orange;
 
                 return Card(
                   margin:
@@ -542,11 +547,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                           leading: Container(
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: isPaidOff
-                                  ? Colors.green.withOpacity(0.1)
-                                  : isOverdue
-                                      ? Colors.red.withOpacity(0.1)
-                                      : Colors.orange.withOpacity(0.1),
+                              color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
