@@ -164,13 +164,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Color.fromARGB(255, 241, 189, 189),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  Icon(  
                     Icons.calendar_today,
                     color: Colors.white70,
                     size: 16,
