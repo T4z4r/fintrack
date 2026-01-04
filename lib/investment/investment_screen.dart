@@ -184,7 +184,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(8),
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -203,7 +203,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                         onRefresh: _fetchInvestments,
                         color: Color(0xFF72140C),
                         child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           itemCount: filteredInvestments.length,
                           itemBuilder: (context, index) {
                             final investment = filteredInvestments[index];
@@ -220,8 +220,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 10),
-                              color: Theme.of(context).cardColor,
+                                  vertical: 2, horizontal: 0),
+                              color: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),

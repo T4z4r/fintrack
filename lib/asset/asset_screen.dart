@@ -212,7 +212,7 @@ class _AssetScreenState extends State<AssetScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(8),
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -231,7 +231,7 @@ class _AssetScreenState extends State<AssetScreen> {
                         onRefresh: _fetchAssets,
                         color: Color(0xFF72140C),
                         child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           itemCount: filteredAssets.length,
                           itemBuilder: (context, index) {
                             final asset = filteredAssets[index];
@@ -243,8 +243,8 @@ class _AssetScreenState extends State<AssetScreen> {
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 10),
-                              color: Theme.of(context).cardColor,
+                                  vertical: 2, horizontal: 0),
+                              color: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -261,12 +261,12 @@ class _AssetScreenState extends State<AssetScreen> {
                                   leading: Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: color.withOpacity(0.1),
+                                      color: Color(0xFF72140C).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
                                       icon,
-                                      color: color,
+                                      color: Color(0xFF72140C),
                                       size: 20,
                                     ),
                                   ),
