@@ -100,12 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.trending_up),
+              icon: Icon(Icons.receipt),
               activeIcon: Icon(Icons.receipt),
               label: 'Income',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.trending_down),
+              icon: Icon(Icons.calculate),
               activeIcon: Icon(Icons.calculate),
               label: 'Expense',
             ),
