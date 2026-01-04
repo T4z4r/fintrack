@@ -24,7 +24,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   final _debtNameController = TextEditingController();
   final _debtAmountController = TextEditingController();
   final _debtDueDateController = TextEditingController();
-  String _debtStatus = 'partial';
+  String _debtStatus = 'unpaid';
 
   // Debt payment form controllers
   final _debtPaymentFormKey = GlobalKey<FormState>();
@@ -109,7 +109,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     _debtNameController.clear();
     _debtAmountController.clear();
     _debtDueDateController.clear();
-    _debtStatus = 'partial';
+    _debtStatus = 'unpaid';
 
     final result = await BottomSheetForm.show<Map<String, dynamic>>(
       context: context,
@@ -326,12 +326,423 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _viewDebtDetails(Map<String, dynamic> debt) async {
+    final amount = double.tryParse(debt['amount']?.toString() ?? '0') ?? 0.0;
+    final payments = _debtPaymentsByDebt[debt['id']] ?? [];
+    final totalPaid = payments.fold<double>(
+        0.0,
+        (double sum, payment) =>
+            sum +
+            (double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0));
+    final remainingAmount = amount - totalPaid;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: EdgeInsets.only(top: 50),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.credit_card,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          debt['name'] ?? 'Unnamed Debt',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red[700],
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Complete debt information and payment history',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Container(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Amount overview
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.red.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Amount',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              Text(
+                                '\$${amount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Paid',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              Text(
+                                '\$${totalPaid.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Remaining',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              Text(
+                                '\$${remainingAmount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: remainingAmount > 0
+                                      ? Colors.red[600]
+                                      : Colors.green[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    // Details
+                    _buildDetailSection('Debt Information', [
+                      _buildDetailRow(
+                          'Name', debt['name'] ?? 'N/A', Icons.business),
+                      _buildDetailRow(
+                          'Status', debt['status'] ?? 'N/A', Icons.info),
+                      _buildDetailRow('Amount',
+                          '\$${amount.toStringAsFixed(2)}', Icons.attach_money),
+                      _buildDetailRow('Due Date', debt['due_date'] ?? 'N/A',
+                          Icons.calendar_today),
+                    ]),
+                    SizedBox(height: 16),
+                    _buildDetailSection('Timestamps', [
+                      _buildDetailRow('Created', debt['created_at'] ?? 'N/A',
+                          Icons.access_time),
+                      _buildDetailRow(
+                          'Updated', debt['updated_at'] ?? 'N/A', Icons.update),
+                    ]),
+                    if (payments.isNotEmpty) ...[
+                      SizedBox(height: 16),
+                      _buildDetailSection('Recent Payments', [
+                        ...payments.take(3).map((payment) => _buildDetailRow(
+                              '${payment['payment_date'] ?? 'N/A'} - ${payment['payment_method'] ?? 'N/A'}',
+                              '\$${(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0.0).toStringAsFixed(2)}',
+                              Icons.payment,
+                            )),
+                        if (payments.length > 3)
+                          _buildDetailRow(
+                              'And ${payments.length - 3} more payments',
+                              '',
+                              Icons.more_horiz),
+                      ]),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            // Footer
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, [IconData? icon]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.red,
+                size: 20,
+              ),
+            ),
+            SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[900],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailSection(String title, List<Widget> children) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.red[700],
+            ),
+          ),
+          SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editDebt(int id) async {
+    try {
+      final response = await _api.getDebt(id);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final debt = data['data'];
+          // Pre-fill controllers
+          _debtNameController.text = debt['name'] ?? '';
+          _debtAmountController.text = debt['amount']?.toString() ?? '';
+          _debtDueDateController.text = debt['due_date'] ?? '';
+          _debtStatus = debt['status'] ?? 'unpaid';
+
+          final result = await BottomSheetForm.show<Map<String, dynamic>>(
+            context: context,
+            title: 'Edit Debt',
+            header: Container(
+              width: double.infinity,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.edit,
+                size: 40,
+                color: Colors.red,
+              ),
+            ),
+            formKey: _debtFormKey,
+            formFields: [
+              _buildDebtNameField(),
+              SizedBox(height: 16),
+              _buildDebtAmountField(),
+              SizedBox(height: 16),
+              _buildDebtDueDateField(),
+              SizedBox(height: 16),
+              _buildDebtStatusField(),
+            ],
+            onCancel: () => Navigator.of(context).pop(),
+            onSubmit: () {
+              Navigator.of(context).pop({
+                'name': _debtNameController.text,
+                'amount': double.parse(_debtAmountController.text),
+                'due_date': _debtDueDateController.text,
+                'status': _debtStatus,
+              });
+            },
+            submitText: 'Update Debt',
+          );
+
+          if (result != null) {
+            final updateResponse = await _api.updateDebt(id, result);
+            if (updateResponse.statusCode == 200) {
+              _fetchData();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Debt updated successfully')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update debt')),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   Widget _buildDebtNameField() {
     return TextFormField(
       controller: _debtNameController,
       decoration: InputDecoration(labelText: 'Name'),
-      validator: (value) =>
-          value?.isEmpty ?? true ? 'Please enter name' : null,
+      validator: (value) => value?.isEmpty ?? true ? 'Please enter name' : null,
     );
   }
 
@@ -358,7 +769,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     return DropdownButtonFormField<String>(
       value: _debtStatus,
       decoration: InputDecoration(labelText: 'Status'),
-      items: ['partial', 'paid', 'overdue']
+      items: ['unpaid', 'partial']
           .map((status) => DropdownMenuItem(
                 value: status,
                 child: Text(status),
@@ -383,8 +794,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
           _debtPaymentDebtId = value;
         });
       },
-      validator: (value) =>
-          value == null ? 'Please select a debt' : null,
+      validator: (value) => value == null ? 'Please select a debt' : null,
     );
   }
 
@@ -411,9 +821,8 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     return TextFormField(
       controller: _debtPaymentMethodController,
       decoration: InputDecoration(labelText: 'Payment Method'),
-      validator: (value) => value?.isEmpty ?? true
-          ? 'Please enter payment method'
-          : null,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter payment method' : null,
     );
   }
 
@@ -537,7 +946,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                     double.tryParse(debt['amount']?.toString() ?? '0') ?? 0.0;
                 final remainingAmount = debtAmount - totalPaid;
                 final isPaidOff = remainingAmount <= 0;
-                final isOverdue = debt['status'] == 'overdue';
+                final isUnpaid = debt['status'] == 'unpaid';
 
                 return Card(
                   margin:
@@ -563,7 +972,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                             decoration: BoxDecoration(
                               color: isPaidOff
                                   ? Colors.green.withOpacity(0.1)
-                                  : isOverdue
+                                  : isUnpaid
                                       ? Colors.red.withOpacity(0.1)
                                       : Colors.orange.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -574,7 +983,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                                   : Icons.credit_card,
                               color: isPaidOff
                                   ? Colors.green
-                                  : isOverdue
+                                  : isUnpaid
                                       ? Colors.red
                                       : Colors.orange,
                               size: 20,
@@ -587,11 +996,31 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                           trailing: PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert),
                             onSelected: (value) {
-                              if (value == 'delete') {
+                              if (value == 'view') {
+                                _viewDebtDetails(debt);
+                              } else if (value == 'edit') {
+                                _editDebt(debt['id']);
+                              } else if (value == 'delete') {
                                 _deleteDebt(debt['id']);
                               }
                             },
                             itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'view',
+                                child: ListTile(
+                                  leading: Icon(Icons.visibility,
+                                      color: Colors.blue),
+                                  title: Text('View Details'),
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'edit',
+                                child: ListTile(
+                                  leading:
+                                      Icon(Icons.edit, color: Colors.orange),
+                                  title: Text('Edit'),
+                                ),
+                              ),
                               const PopupMenuItem(
                                 value: 'delete',
                                 child: ListTile(
@@ -847,4 +1276,3 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
           );
   }
 }
-
