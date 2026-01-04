@@ -314,7 +314,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
             onRefresh: _fetchData,
             color: Color(0xFF72140C),
             child: ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(8),
               itemCount: _debts.length,
               itemBuilder: (context, index) {
                 final debt = _debts[index];
@@ -334,8 +334,8 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
 
                 return Card(
                   margin:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                  color: Theme.of(context).cardColor,
+                      const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -397,7 +397,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(8),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
