@@ -28,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? theme.cardColor : const Color(0xFFFBF5F5),
+        color: const Color.fromARGB(255, 240, 219, 219),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: theme.primaryColor,
