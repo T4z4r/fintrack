@@ -313,7 +313,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               : Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(8),
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -332,7 +332,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         onRefresh: _fetchExpenses,
                         color: Color(0xFF72140C),
                         child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           itemCount: filteredExpenses.length,
                           itemBuilder: (context, index) {
                             final expense = filteredExpenses[index];
@@ -342,8 +342,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 10),
-                              color: Theme.of(context).cardColor,
+                                  vertical: 2, horizontal: 2),
+                              color: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
