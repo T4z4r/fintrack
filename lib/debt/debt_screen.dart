@@ -34,6 +34,10 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   final _debtPaymentNotesController = TextEditingController();
   int? _debtPaymentDebtId;
 
+  // Search
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
   String _formatDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return 'N/A';
     try {
@@ -63,6 +67,7 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
     _debtPaymentDateController.dispose();
     _debtPaymentMethodController.dispose();
     _debtPaymentNotesController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -430,6 +435,59 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
             )
           : Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() => _searchQuery = '');
+                                      },
+                                    )
+                                  : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 0, horizontal: 10),
+                            ),
+                            onChanged: (value) =>
+                                setState(() => _searchQuery = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _tabController.index == 0
+                            ? _addDebt
+                            : _addDebtPayment,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                        ),
+                        icon: Icon(Icons.add,
+                            color: Theme.of(context).colorScheme.onPrimary),
+                        label: Text(_tabController.index == 0
+                            ? 'Add Debt'
+                            : 'Add Payment'),
+                      ),
+                    ],
+                  ),
+                ),
                 TabBar(
                   controller: _tabController,
                   labelColor: Color(0xFF72140C),
@@ -468,7 +526,17 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDebtsTab() {
-    return _debts.isEmpty
+    final filteredDebts = _debts.where((debt) {
+      final query = _searchQuery.toLowerCase();
+      final name = (debt['name'] ?? '').toLowerCase();
+      final amount = (debt['amount']?.toString() ?? '').toLowerCase();
+      final status = (debt['status'] ?? '').toLowerCase();
+      return name.contains(query) ||
+          amount.contains(query) ||
+          status.contains(query);
+    }).toList();
+
+    return filteredDebts.isEmpty
         ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -503,9 +571,9 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
             color: Color(0xFF72140C),
             child: ListView.builder(
               padding: EdgeInsets.all(8),
-              itemCount: _debts.length,
+              itemCount: filteredDebts.length,
               itemBuilder: (context, index) {
-                final debt = _debts[index];
+                final debt = filteredDebts[index];
                 final payments = _debtPaymentsByDebt[debt['id']] ?? [];
                 final totalPaid = payments.fold<double>(
                     0.0,
@@ -725,7 +793,17 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildPaymentsTab() {
-    return _debtPayments.isEmpty
+    final filteredPayments = _debtPayments.where((payment) {
+      final query = _searchQuery.toLowerCase();
+      final method = (payment['payment_method'] ?? '').toLowerCase();
+      final amount = (payment['amount']?.toString() ?? '').toLowerCase();
+      final notes = (payment['notes'] ?? '').toLowerCase();
+      return method.contains(query) ||
+          amount.contains(query) ||
+          notes.contains(query);
+    }).toList();
+
+    return filteredPayments.isEmpty
         ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -760,9 +838,9 @@ class _DebtScreenState extends State<DebtScreen> with TickerProviderStateMixin {
             color: Color(0xFF72140C),
             child: ListView.builder(
               padding: EdgeInsets.all(16),
-              itemCount: _debtPayments.length,
+              itemCount: filteredPayments.length,
               itemBuilder: (context, index) {
-                final payment = _debtPayments[index];
+                final payment = filteredPayments[index];
                 return Card(
                   margin:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
